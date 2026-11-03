@@ -150,7 +150,7 @@ While it is not strictly required, we often assume that $\Theta_i := e^{u_i} \si
 In general, $\ell(\bm{\beta})$ is not explicitly expressed without the integrals so one can consider the following ways for finding the MLE of $\bm{\beta}$:
 \begin{itemize}
 	\item EM algorithms: `pretend' that you have complete observations of $u_i$, and iterate to obtain the $\hat{\bm{\beta}}$,
-	\item The adaptive Gauss-Hermite approximation: approximate the integral as a finite sum and then evalute the likelihood.
+	\item The adaptive Gauss-Hermite approximation: approximate the integral as a finite sum and then evaluate the likelihood.
 \end{itemize}
 If we assume $u_i$ follows a normal distribution, then we can use the adaptive Gauss-Hermite approximation to find $\hat{\bm{\beta}}$ in \texttt{R} using a package (e.g., \texttt{glmer}).
 
@@ -227,7 +227,7 @@ f(y_{i,t}|\theta_i) &= \frac{(\theta_i \nu_{i,t})^{y_{i,t}} e^{-\theta_i \nu_{i,
 \pi(\theta_i) &= \frac{r^r}{\Gamma(r)} \theta_i^{r-1} e^{-r\theta_i},
 \end{align*}
 where $\nu_{i,t} = \exp\left(\mathbf{x}_{i,t}'\bm{\beta}\right)$.\\
-Can you see that $\mathbb{E}[\Theta_i] = \int_0^\infty \theta_i \pi(\theta_i) = 1$?
+Can you see that $\mathbb{E}[\Theta_i] = \int_0^\infty \theta_i \pi(\theta_i) d\theta_i = 1$?
 
 \end{frame}
 
@@ -276,7 +276,7 @@ By letting $u = \theta_i(\nu_{i,\bullet} + r)$, we have
 & \onslide<2->{= \sum_{i=1}^m \log \int \left[ \prod_{t=1}^{n_i} f(y_{i,t}|\theta_i) \right] \pi(\theta_i) d\theta_i} \\
 & \onslide<3->{= \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (y_{i,t} \log \nu_{i,t} - \log y_{i,t}!) + r \log r \right.} \\
 & \onslide<4->{\left. - \log \Gamma(r) + \log \Gamma(y_{i,\bullet}+r) - (y_{i,\bullet}+r)\log(\nu_{i,\bullet}+r) \right],} \\
-& \onslide<5->{{\color{purple} = \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (y_{i,t} \log \nu_{i,t})) - (y_{i,\bullet}+r)\log(\nu_{i,\bullet}+r) \right]}} \\
+& \onslide<5->{{\color{purple} = \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (y_{i,t} \log \nu_{i,t}) - (y_{i,\bullet}+r)\log(\nu_{i,\bullet}+r) \right]}} \\
 & \onslide<6->{+ \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (-\log y_{i,t}!) + \log \Gamma(y_{i,\bullet}+r) \right] + mr\log r - m \log \Gamma(r)}
 \end{align*}
 
@@ -477,7 +477,7 @@ It implies that in the case of Poisson GLM, past observations \textbf{DO NOT} af
 
 It is natural to use the following measures, root-mean-squared error (RMSE) and Poisson deviance (PDEV) to assess the prediction performance:
 \begin{align*}
-\text{RMSE} : & \sqrt{\frac{1}{m} \sum_{i=1}^M (y_{i,T_i+1} - \hat{y}_{i,T_i+1})^2}, \\
+\text{RMSE} : & \sqrt{\frac{1}{m} \sum_{i=1}^m (y_{i,T_i+1} - \hat{y}_{i,T_i+1})^2}, \\
 \text{PDEV} : & \frac{2}{m} \sum_{i=1}^m \left( y_{i,T_i+1} \log \frac{y_{i,T_i+1}}{\hat{y}_{i,T_i+1}} - y_{i,T_i+1} + \hat{y}_{i,T_i+1} \right).
 \end{align*}
 We prefer a model with lower RMSE/PDEV.
@@ -556,7 +556,7 @@ $$
 \end{array}
 $$
 \pause
-From now on, we drop the subscript $i$ for succint expressions.
+From now on, we drop the subscript $i$ for succinct expressions.
 \vfill
 \vfill
 \end{frame}
@@ -633,7 +633,7 @@ so that $\E{N_{T+1}|n_1, n_2, \ldots, n_T} = \frac{\sum_{t=1}^T n_t + r}{\sum_{t
 \begin{frame}{Static Credibility Premium for S when $N \perp C$}
 Frangos and Vrontos (2001) derived the following formula for (static) credibility premium of $S$ assuming $N \perp C$.
 \begin{theorem}
-Suppose $(N_1, N_2, \ldots, N_t)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that $\E{C_t|n_t} = \theta^C e^{\mathbf{x}_t \beta} = \theta^C \tilde{\mu}_t$. Then credibility premium of $S_{i,T+1}$ given $n_1, \ldots, n_T, c_1, \ldots, c_T$ is given as follows:
+Suppose $(N_1, N_2, \ldots, N_T)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that $\E{C_t|n_t} = \theta^C e^{\mathbf{x}_t \beta} = \theta^C \tilde{\mu}_t$. Then credibility premium of $S_{T+1}$ given $n_1, \ldots, n_T, c_1, \ldots, c_T$ is given as follows:
 \begin{align*}
 \mathbb{E}[S_{T+1}|\mathcal{F}_T] &= \mathbb{E}[N_{T+1}|n_1, \ldots, n_T] \times \mathbb{E}[C_{T+1}|\mathcal{F}_T] \\
 &= \text{\emph{Cred. Freq. mean}} \ \times \text{\emph{Cred. Sev. mean}}
@@ -704,17 +704,17 @@ $$
 
 \begin{frame}{Static Credibility Premium for S when $N \not\perp C$}
 \begin{theorem}
-Suppose $(N_1, N_2, \ldots, N_t)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that \\
+Suppose $(N_1, N_2, \ldots, N_T)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that \\
 $\E{C_t|n_t} = \theta^C e^{\mathbf{x}_t\beta}\, {\color{purple}e^{n_t\gamma}} = \theta^C \tilde{\mu}_t\, {\color{purple}e^{n_t\gamma}}$. Then, the credibility premium of $S_{T+1}$ is given as follows:
 \begin{equation}\label{p2:eq:credS}
 \begin{aligned}
-\E{S_{T+1}|\mathcal{F}_T} &= \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_{t-1}}} \\
+\E{S_{T+1}|\mathcal{F}_T} &= \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_T}} \\
 &\quad \times e^\gamma\left[1-\left(\frac{\nu_{T+1}}{\sum_{t=1}^T \nu_t + r}\right)(e^\gamma - 1)\right]^{-\sum_{t=1}^T n_t - r - 1}.
 \end{aligned}
 \end{equation}
 If $\gamma=0$, then \eqref{p2:eq:credS} is reduced as in Frangos and Vrontos (2001):
 $$
-\E{S_{T+1}|\mathcal{F}_T} = \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_{t-1}}}.
+\E{S_{T+1}|\mathcal{F}_T} = \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_T}}.
 $$
 \end{theorem}
 \end{frame}
@@ -729,7 +729,7 @@ $$
 	\end{itemize}
 	\item Under the MVNB distribution defined in \eqref{p2:eq:mvnb}, we have the following:
 	$$
-	\E{\nu_{T+1}\theta^N|\underline{n_{t-1}}} = \frac{r+\sum_{t=1}^T n_t}{r+\sum_{t=1}^T \nu_t}\nu_{T+1}.
+	\E{\nu_{T+1}\theta^N|\underline{n_T}} = \frac{r+\sum_{t=1}^T n_t}{r+\sum_{t=1}^T \nu_t}\nu_{T+1}.
 	$$
 	\item For convenience, let us denote \\
 	$D_N(\gamma) = e^\gamma\left[1-\left(\frac{\nu_{T+1}}{\sum_{t=1}^T \nu_t + r}\right)(e^\gamma - 1)\right]^{-\sum_{t=1}^T n_t - r - 1}$ so that $D_N(0)=1$.
@@ -850,7 +850,7 @@ $$
 %----------------------------------------------------------------------
 \begin{frame}{Building Blocks for Dynamic Random Effects CRMs}
 \begin{itemize}
-\item<2-> Innovation of the dynamic (gamma) random effects (Lukacs, 1995),
+\item<2-> Innovation of the dynamic (gamma) random effects (Lukacs, 1955),
 \item<3-> Frequency dynamic random effects models (Harvey and Fernandez, 1989),
 \item<4-> Severity dynamic random effects models (Smith and Miller, 1986), and
 \item<5-> Cross-sectional dependence between the frequency and severity (Garrido et al., 2016; Jeong and Valdez, 2020).
@@ -953,7 +953,7 @@ One can check that $N_{T+1}\,|\,\underline{n_T}$ still follows a negative binomi
 = \nu_{T+1}\frac{\sum\limits_{t=1}^T p^{T-t}n_t + p^Tr}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr}
 = \nu_{T+1}\left[a_0 + \sum_{t=1}^T a_t \frac{n_t}{\nu_t}\right], \\
 \text{with } a_0 := \frac{p^Tr}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr} \quad \text{and} \quad
-a_t := \frac{p^{\tau-1-t}\nu_t}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr}.
+a_t := \frac{p^{T-t}\nu_t}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr}.
 \end{gathered}
 \end{equation}
 }
@@ -998,7 +998,7 @@ Note that the conditional distribution of $\theta^C_t$ given $\underline{c_{t-1}
 \begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
 \setbeamertemplate{enumerate items}[default]
 \begin{enumerate}[i.]
-\setcounter{enumi}{2}
+\setcounter{enumi}{1}
 \item (Observation at time $t$) Given $\underline{c_{t-1}}$, $\underline{n_t}$, and $\underline{\theta^C_t}$, observation $C_t$ has the following conditional distribution:
 $$
 C_t|\underline{c_{t-1}}, \underline{n_t}, \underline{\theta^C_t} \sim \mathcal{G}\left(\frac{n_t}{\psi}, \frac{n_t}{\psi\mu_t\theta^C_t}\right),
