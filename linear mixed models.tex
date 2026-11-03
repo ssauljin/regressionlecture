@@ -1,49 +1,10 @@
-\documentclass{beamer}
-\mode<presentation> {\usetheme{default}}
-%\setbeamersize{text margin left=10mm,text margin right=10mm} 
+\documentclass[ignorenonframetext,]{beamer}
+\input{preamble}
 
-\setbeamertemplate{footline}[frame number]
-
-
-\usepackage{amssymb}
-\usepackage{multirow}
-\usepackage{amsthm}
-\usepackage{amsmath}
-\usepackage{booktabs}
-\usepackage{bm}
-\usepackage{needspace}
-\usepackage{comment}
-\usepackage{tikz}
-\usepackage{graphicx}
-\usepackage{bbm, dsfont}
-
-\usetikzlibrary{arrows,shapes,calc,positioning}
-
-\theoremstyle{plain}
-\newtheorem{thm}{Theorem}[section]
-\newtheorem{cor}[thm]{Corollary}
-\newtheorem{lem}[thm]{Lemma}
-\newtheorem{prop}[thm]{Proposition}
-%
-\theoremstyle{definition}
-\newtheorem{defn}{Definition}[section]
-\newtheorem{remk}{Definition}[section]
-\newtheorem{exam}{Example}[section]
-\newtheorem{prob}{Exercise}[section]
-\newtheorem{solu2}{Solution}[section]
-\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-
-\newcommand{\dif}{\operatorname{d}}
-\newcommand{\var}{\operatorname{Var}}
-
-%opening
 \title{Linear Mixed Models}
-\author{Himchan Jeong, FSA}
-
-\date{}
 
 \begin{document}
-\maketitle
+\frame{\titlepage}
 
 \section{Linear Mixed Models}
 
@@ -181,6 +142,7 @@ $$
 
 \framebreak
 
+\small
 \begin{exam}[Random slopes]
 Suppose there are three clusters ($m=3$) where each of the clusters have 1000 data points ($n_1=n_2=n_3=1000$) with a covariate ${x}_{i,t} \in \mathbb{R}^{1 \times 1}$  and the corresponding response variable $y_{i,t}$. 
 
@@ -200,7 +162,7 @@ $$
 $$
 \end{exam}
 
-\pagebreak
+\framebreak
 
 \begin{exam}[Random intercepts and slopes]
 Suppose there are three clusters ($m=3$) where each of the clusters have 1000 data points ($n_1=n_2=n_3=1000$) with a covariate ${x}_{i,t} \in \mathbb{R}^{1 \times 1}$  and the corresponding response variable $y_{i,t}$. 

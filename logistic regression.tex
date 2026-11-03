@@ -1,49 +1,10 @@
-\documentclass{beamer}
-\mode<presentation> {\usetheme{default}}
-%\setbeamersize{text margin left=10mm,text margin right=10mm} 
+\documentclass[ignorenonframetext,]{beamer}
+\input{preamble}
 
-\setbeamertemplate{footline}[frame number]
-
-\usepackage{multirow}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{amsmath}
-\usepackage{booktabs}
-\usepackage{bm}
-\usepackage{needspace}
-\usepackage{comment}
-\usepackage{tikz}
-\usepackage{graphicx}
-\usepackage{bbm, dsfont}
-\usepackage{listings}
-
-\usetikzlibrary{arrows,shapes,calc,positioning}
-
-\theoremstyle{plain}
-\newtheorem{thm}{Theorem}[section]
-\newtheorem{cor}[thm]{Corollary}
-\newtheorem{lem}[thm]{Lemma}
-\newtheorem{prop}[thm]{Proposition}
-%
-\theoremstyle{definition}
-\newtheorem{defn}{Definition}[section]
-\newtheorem{remk}{Definition}[section]
-\newtheorem{exam}{Example}[section]
-\newtheorem{prob}{Exercise}[section]
-\newtheorem{solu2}{Solution}[section]
-\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-
-\newcommand{\dif}{\operatorname{d}}
-\newcommand{\var}{\operatorname{Var}}
-\newcommand{\brtexttt}[1]{\texttt{\color{brown}{#1}}}
-
-%opening
 \title{Logistic Regression}
-\author{Himchan Jeong, FSA}
-\date{}
 
 \begin{document}
-\maketitle
+\frame{\titlepage}
 
 \section{Logistic Regression}
 

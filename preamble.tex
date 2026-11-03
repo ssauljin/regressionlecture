@@ -1,0 +1,144 @@
+% =====================================================================
+% Shared Beamer preamble for all regression lecture slides
+%
+% Usage in each lecture file:
+%   \documentclass[ignorenonframetext,]{beamer}
+%   \input{preamble}
+%   \title{...}
+%   \begin{document}
+%   \frame{\titlepage}
+%   ...
+% =====================================================================
+
+% ---------------------------------------------------------------------
+% Theme and captions
+% ---------------------------------------------------------------------
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+
+% ---------------------------------------------------------------------
+% Fonts and encoding (pdfLaTeX, XeLaTeX and LuaLaTeX all supported)
+% ---------------------------------------------------------------------
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+\ifxetex
+\usepackage{mathspec}
+\else
+\usepackage{fontspec}
+\fi
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+
+\usetheme{Madrid}
+\usecolortheme{orchid}
+\usepackage{beamerthemesplit}
+
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+
+% ---------------------------------------------------------------------
+% Packages
+% ---------------------------------------------------------------------
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{bbm, dsfont}
+\usepackage{extarrows}
+\usepackage{kotex}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{hhline}
+\usepackage{caption}
+\usepackage{comment}
+\usepackage{needspace}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,calc,positioning}
+
+\newif\ifbibliography
+
+% ---------------------------------------------------------------------
+% Graphics: scale images so that they do not overflow the page margins
+% by default; explicit \includegraphics options still take precedence.
+% ---------------------------------------------------------------------
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight0.8\textheight\else\Gin@nat@height\fi}
+\makeatother
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+
+% ---------------------------------------------------------------------
+% Colors
+% ---------------------------------------------------------------------
+\definecolor{azure}{rgb}{0, 0.4, 0.8}
+\definecolor{crimson}{rgb}{0.8, 0.4, 0}
+\definecolor{gold}{rgb}{0.72, 0.53, 0.04}
+\definecolor{ciel}{rgb}{0.39, 0.58, 0.93}
+\definecolor{dgreen}{rgb}{0.01, 0.75, 0.24}
+
+% ---------------------------------------------------------------------
+% Layout
+% ---------------------------------------------------------------------
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+\captionsetup[table]{belowskip=0pt,aboveskip=0pt}
+\captionsetup[figure]{belowskip=0pt,aboveskip=0pt}
+
+% ---------------------------------------------------------------------
+% Theorem-like environments
+% (Beamer already provides theorem, corollary, lemma, definition,
+%  example, ... ; the short names below are used by the lecture files.)
+% ---------------------------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{remk}{Remark}[section]
+\newtheorem{exam}{Example}[section]
+\newtheorem{prob}{Exercise}[section]
+\newtheorem{solu2}{Solution}[section]
+\newtheorem{model}{Model}
+
+% ---------------------------------------------------------------------
+% Macros
+% ---------------------------------------------------------------------
+\newcommand{\E}[1]{{\mathbb E}\left[#1\right]}
+\newcommand{\Var}[1]{{\mathrm Var}\left(#1\right)}
+\newcommand{\var}{\operatorname{Var}}
+\newcommand{\dif}{\operatorname{d}}
+\newcommand{\parallelsum}{\mathbin{\!/\mkern-5mu/\!}}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\newcommand{\brtexttt}[1]{\texttt{\color{brown}{#1}}}
+
+% ---------------------------------------------------------------------
+% Author and date (common to all lectures)
+% ---------------------------------------------------------------------
+\author[Himchan Jeong]{\large{Himchan Jeong, PhD, FSA}}
+\date{}
