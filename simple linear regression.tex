@@ -1,0 +1,240 @@
+\documentclass[ignorenonframetext,]{beamer}
+\input{preamble}
+
+\title{Simple Linear Regression}
+\subtitle{Chapter 3.1 --- An Introduction to Statistical Learning}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Overview}
+A foundational approach for predicting a quantitative response $Y$ using a single predictor variable $X$ via a linear relationship.
+
+\vspace{1em}
+\textbf{Topics:}
+\begin{itemize}
+\item Model Setup
+\item Coefficient Estimation
+\item Standard Errors
+\item Hypothesis Testing
+\item $R^2$ \& RSE
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Linear Model}
+$$Y \approx \beta_0 + \beta_1 X$$
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{Model Components}
+\small
+\begin{tabular}{@{}p{0.08\linewidth}>{\raggedright\arraybackslash}p{0.84\linewidth}@{}}
+$\beta_0$ & Intercept --- expected value of $Y$ when $X=0$ \\[2pt]
+$\beta_1$ & Slope --- avg.\ increase in $Y$ per unit increase in $X$ \\[2pt]
+$\varepsilon$ & Error term --- captures unexplained variation \\[2pt]
+$\hat{Y}$ & Predicted value: $\hat{Y} = \hat\beta_0 + \hat\beta_1 x$
+\end{tabular}
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{Advertising Example}
+\small
+$$\text{sales} \approx \beta_0 + \beta_1 \times \text{TV}$$
+\begin{itemize}
+\item $X$ = TV advertising budget (\$1,000s)
+\item $Y$ = Product sales (1,000 units)
+\end{itemize}
+\textbf{Goal:} Find $\hat\beta_0$ and $\hat\beta_1$ such that the line fits the data as closely as possible.
+\end{block}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Estimating the Coefficients}
+\textbf{Residual:} $e_i = y_i - \hat{y}_i$ (difference between observed and predicted value for observation $i$)
+
+\begin{alertblock}{Residual Sum of Squares (RSS)}
+$$\mathrm{RSS} = e_1^2 + e_2^2 + \cdots + e_n^2$$
+\end{alertblock}
+
+\begin{block}{Least Squares Approach}
+\begin{enumerate}
+\item Compute $e_i = y_i - (\hat\beta_0 + \hat\beta_1 x_i)$ for each of the $n$ observations
+\item Square each residual and sum them to get RSS
+\item Choose $\hat\beta_0$ and $\hat\beta_1$ that minimize RSS --- this is the least squares criterion
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Least Squares Coefficient Estimates}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{Slope $\hat\beta_1$}
+$$\hat\beta_1 = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sum (x_i - \bar{x})^2}$$
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{Intercept $\hat\beta_0$}
+$$\hat\beta_0 = \bar{y} - \hat\beta_1 \bar{x}$$
+\end{block}
+\end{columns}
+
+\begin{block}{Key Intuitions}
+\begin{itemize}
+\item $\bar{x}$ and $\bar{y}$ are sample means: $\bar{x} = (1/n)\sum x_i$ and $\bar{y} = (1/n)\sum y_i$
+\item $\hat\beta_1$ measures how much $Y$ co-varies with $X$, normalized by the variance of $X$
+\item $\hat\beta_0$ ensures the regression line always passes through the point $(\bar{x}, \bar{y})$
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Advertising Example: Fitted Model}
+$$\text{sales} \approx 7.03 + 0.0475 \times \text{TV}$$
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{Intercept}
+\centering
+$\hat\beta_0 = 7.03$
+
+\small Baseline sales when TV advertising budget = \$0
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{Slope}
+\centering
+$\hat\beta_1 = 0.0475$
+
+\small Each additional \$1,000 in TV advertising $\rightarrow$ $\sim$47.5 more units
+\end{block}
+\end{columns}
+
+\begin{exampleblock}{Interpretation}
+For every \$1,000 increase in TV advertising, product sales increase by approximately 47.5 units on average. Even with zero advertising, the model predicts $\sim$7,030 baseline sales.
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}{Population Line vs.\ Least Squares Line}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{Population Regression Line}
+\small
+\begin{itemize}
+\item True (unknown) linear relationship: $Y = \beta_0 + \beta_1 X + \varepsilon$
+\item $\beta_0$ and $\beta_1$ are fixed but unknown constants
+\item Cannot be observed in practice
+\item Represents the best linear approximation to $f(X)$
+\end{itemize}
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{Least Squares Line}
+\small
+\begin{itemize}
+\item Our best estimate using observed data
+\item $\hat\beta_0$ and $\hat\beta_1$ are computed from training data
+\item Changes slightly with each sample
+\item On average, very close to the true population line
+\end{itemize}
+\end{block}
+\end{columns}
+
+\begin{alertblock}{Analogy}
+\small
+Just as we estimate the population mean $\mu$ with the sample mean $\hat\mu$, we estimate $\beta_0$ and $\beta_1$ with $\hat\beta_0$ and $\hat\beta_1$. Both estimates are unbiased --- they don't systematically over- or under-estimate the true value.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Standard Errors of Coefficient Estimates}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{$SE(\hat\beta_1)^2$}
+\centering
+$\dfrac{\sigma^2}{\sum (x_i - \bar{x})^2}$
+
+\footnotesize\textit{Smaller when $X$ values are more spread out}
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{$SE(\hat\beta_0)^2$}
+\centering
+$\sigma^2 \left[\dfrac{1}{n} + \dfrac{\bar{x}^2}{\sum (x_i - \bar{x})^2}\right]$
+
+\footnotesize\textit{Equals $SE(\hat\mu)^2$ when $\bar{x} = 0$}
+\end{block}
+\end{columns}
+
+\begin{center}
+where $\sigma^2 = \var(\varepsilon)$ and $\sigma$ is estimated by $\mathrm{RSE} = \sqrt{\mathrm{RSS}/(n-2)}$
+\end{center}
+
+\begin{block}{95\% Confidence Intervals}
+\centering
+$\hat\beta_1 \pm 2 \cdot SE(\hat\beta_1) \qquad \hat\beta_0 \pm 2 \cdot SE(\hat\beta_0)$
+
+\small Advertising data: $\beta_1 \in [0.042, 0.053]$ $\mid$ $\beta_0 \in [6.130, 7.935]$
+\end{block}
+\end{frame}
+
+\begin{frame}{Hypothesis Testing}
+\begin{tabular}{@{}ll@{}}
+$H_0$ (Null) & $\beta_1 = 0 \rightarrow$ No relationship between $X$ and $Y$ \\[3pt]
+$H_a$ (Alt.) & $\beta_1 \neq 0 \rightarrow$ Some relationship exists
+\end{tabular}
+
+\begin{block}{t-Statistic}
+$$t = \frac{\hat\beta_1 - 0}{SE(\hat\beta_1)} \quad \rightarrow \quad \text{measures how many standard deviations } \hat\beta_1 \text{ is from 0}$$
+\end{block}
+
+\begin{block}{Advertising Data Results}
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Term & Estimate & Std.\ Error & t-Statistic & p-value \\
+\midrule
+Intercept & 7.0325 & 0.4578 & 15.36 & {\color{red}$< 0.0001$} \\
+TV & 0.0475 & 0.0027 & 17.67 & {\color{red}$< 0.0001$} \\
+\bottomrule
+\end{tabular}
+\end{block}
+\end{frame}
+
+\begin{frame}{Assessing Model Fit: RSE and $R^2$}
+\begin{columns}[T]
+\column{0.5\linewidth}
+\begin{block}{Residual Standard Error (RSE)}
+\footnotesize
+$$\mathrm{RSE} = \sqrt{\mathrm{RSS}/(n-2)}$$
+\begin{itemize}
+\item Estimates $\sigma$ (std.\ dev.\ of error $\varepsilon$)
+\item Average deviation of $Y$ from regression line
+\item Advertising data: RSE = 3.26 ($\sim$23\% of mean sales)
+\end{itemize}
+\end{block}
+\column{0.5\linewidth}
+\begin{block}{$R^2$ Statistic}
+\footnotesize
+$$R^2 = \frac{\mathrm{TSS} - \mathrm{RSS}}{\mathrm{TSS}}$$
+\begin{itemize}
+\item Proportion of variance explained (0 to 1)
+\item $R^2 = 1 - \mathrm{RSS}/\mathrm{TSS}$ where $\mathrm{TSS} = \sum (y_i - \bar{y})^2$
+\item Advertising data: $R^2 = 0.61$ (61\% explained)
+\end{itemize}
+\end{block}
+\end{columns}
+
+\begin{block}{RSE vs.\ $R^2$ --- Key Difference}
+\footnotesize
+\textbf{RSE:} Absolute measure (in units of $Y$) --- context-dependent. \textbf{$\bm{R^2}$:} Relative proportion --- always between 0 and 1, scale-independent. In simple regression, $R^2 = r^2$ (squared correlation).
+\end{block}
+\end{frame}
+
+\begin{frame}{Chapter 3.1 --- Key Takeaways}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{@{}>{\bfseries}l p{0.75\linewidth}@{}}
+\toprule
+Model & SLR models $Y$ as a linear function of $X$: $Y \approx \beta_0 + \beta_1 X$ \\
+Estimation & Coefficients $\hat\beta_0$ and $\hat\beta_1$ are found by minimizing RSS (least squares) \\
+Accuracy & Standard errors (SE) measure precision of coefficient estimates \\
+Testing & t-statistics and p-values test whether $X$ truly relates to $Y$ \\
+Fit & RSE (absolute) and $R^2$ (proportional) measure overall model quality \\
+\bottomrule
+\end{tabular}
+
+\vfill
+\centering\footnotesize An Introduction to Statistical Learning --- James, Witten, Hastie, Tibshirani
+\end{frame}
+
+\end{document}

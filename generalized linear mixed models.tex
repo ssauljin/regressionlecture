@@ -1,0 +1,1226 @@
+\documentclass[ignorenonframetext,]{beamer}
+\input{preamble}
+
+\title{Generalized Linear Mixed Models}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Table of Contents}
+\begin{itemize}
+	\item Part 1: Introduction of Generalized Linear Mixed Models
+	\vspace{8pt}
+	\item Part 2: Credibility premium of $S$ with the \textbf{static} random effects
+	\vspace{8pt}
+	\item Part 3: Credibility premium of $S$ with the \textbf{dynamic} random effects
+\end{itemize}
+\end{frame}
+
+%======================================================================
+% Part 1
+%======================================================================
+\section{Introduction of Generalized Linear Mixed Models}
+
+\begin{frame}
+\centering
+\Large\textbf{Part 1: Introduction of\\ Generalized Linear Mixed Models}
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{Motivation}
+
+Recall the basic assumptions of the linear models where $y_1,\ldots,y_m$ are the observed response variable and $\mathbf{x}_1,\ldots, \mathbf{x}_m \in \mathbb{R}^{p \times 1}$ are the individual covariates  (here $Z \in \mathbb{R}^{a \times b}$ means that $Z$ is a $(a \times b)$ real-valued matrix):
+\begin{enumerate}
+	\item $E[y_i] = \mathbf{x}_i' \bm{\beta}$ for $\bm{\beta} = (\beta_1, \ldots, \beta_p) \in \mathbb{R}^{p\times 1}$,
+	\item $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are non-random,
+	\item $Var(y_i) = \sigma^2$,
+	\item $\{ y_1, y_2, \ldots, y_m  \}$ are independent,
+	\item $\{ y_1, y_2, \ldots, y_m  \}$ are normally distributed.
+\end{enumerate}
+Such situations can be written in short as follows:
+\begin{equation} \label{p1:linmod}
+y_i = \mathbf{x}_i' \bm{\beta}  + \epsilon_i, \quad \epsilon_i \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2).
+\end{equation}
+
+Note that the first components of $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are all 1 so that $\beta_1$ corresponds to the \emph{intercept} term in the linear models.
+
+\framebreak
+
+Now, let us assume an example of data with hierarchy so that we observe data points for each of the subjects $i \in \{1,\ldots, m\}$ for time $t=1,\ldots, n_i$. If we adopt the assumptions from the linear models, then we can write them as follows with the modified subscripts:
+\begin{enumerate}
+	\item $E[y_{i,t}] = \mathbf{x}_{i,t}' \bm{\beta}$ for $\beta \in \mathbb{R}^{p \times 1}$,
+	\item $ \{\mathbf{x}_{1,1}, \mathbf{x}_{1,2}, \ldots, \mathbf{x}_{m,n_m} \}$ are non-random,
+	\item $Var(y_{i,t}) = \sigma^2$,
+	\item {\color{red} $\{ y_{1,1}, y_{1,2}, \ldots, y_{m,n_m}  \}$ are independent,}
+	\item {\color{red} $\{  y_{1,1}, y_{1,2}, \ldots, y_{m,n_m}   \}$ are normally distributed.}
+\end{enumerate}
+What if both of Assumptions 4 and 5 are not valid...? (Note that $\{ y_{i,1}, y_{i,2}, \ldots, y_{i,n_i}  \}$ are from the same subject $i$ over time)
+
+\framebreak
+
+In this regard, one can consider the following representation:
+\begin{equation} \label{p1:glmm_intercept}
+\mathbb{E}[y_{i,t}|u_i] = \mu_{i,t}, \quad \eta(\mu_{i,t}) = \mathbf{x}_{i,t}'\bm{\beta} + {\color{red}u_i},
+\end{equation}
+where $u_i$ is a random variable for $i=1,\ldots, m$. Note that it is usual to impose either $\mathbb{E}[u_i]=0$ or $\mathbb{E}[e^{u_i}]=1$.
+
+Although we may incorporate random effects in various ways (not only as the random intercept), for this section we stick to the form in \eqref{p1:glmm_intercept}. Again, $y_{i,t}$ and $y_{i,t'}$ are NOT independent!
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{Examples}
+
+\begin{example}[Normal GLMM]
+Consider the case where $y_{i,t}|u_i$ follows a normal distribution (which belongs to the exponential families) and $\eta(z)=z$ (identity link). In this case, we have
+$$
+y_{i,t}|u_i \overset{indep}\sim \mathcal{N}(\mathbf{x}_{i,t}'\bm{\beta} + u_i, \sigma^2), \quad \mathbb{E}[u_i]=0,
+$$
+which is indeed equivalent to $y_{i,t} = \mathbf{x}_{i,t}'\bm{\beta} + u_i + \epsilon_{i,t}$, $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$. Therefore, one can confirm that the GLMMs are natural extensions of the LMMs.
+\end{example}
+
+\framebreak
+
+\begin{example}[Bernoulli GLMM - logistic regression]
+Consider the case where $y_{i,t}|u_i$ follows a Bernoulli distribution (a special case of the binomial distribution with size 1) and $\eta(z)=\log\left(\frac{z}{1-z}\right)$ (logit link). In this case, we have
+$$
+y_{i,t}|u_i \overset{indep}\sim \mathcal{B}er\left( \frac{e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}}{1+e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}}\right), \quad \mathbb{E}[u_i]=0,
+$$
+so that $\log\left(\frac{E[y_{i,t}|u_i]}{1-E[y_{i,t}|u_i]}\right) = \mathbf{x}_{i,t}'\bm{\beta} + u_i$, and $\mathbb{P}(y_{i,t}=1|u_i) = \mathbb{E}[y_{i,t}|u_i] = \frac{e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}}{1+e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}}$.
+\end{example}
+
+\framebreak
+
+\begin{example}[Poisson GLMM]
+Consider the case where $y_{i,t}|u_i$ follows a Poisson distribution (which belongs to the exponential families) and $\eta(z)=\log z$ (log link). In this case, we have
+$$
+y_{i,t}|u_i \overset{indep}\sim \mathcal{P}(e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}), \quad \mathbb{E}[e^{u_i}]=1,
+$$
+so that $\log \mathbb{E}[y_{i,t}|u_i] = \mathbf{x}_{i,t}'\bm{\beta} + u_i$ and $\mathbb{E}[y_{i,t}|u_i] = e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}$.
+
+While it is not strictly required, we often assume that $\Theta_i := e^{u_i} \sim \mathcal{G}(r, 1/r)$ so that $\mathbb{E}[\Theta_i]=1$ and $\mathbb{V}ar(\Theta_i) = 1/r$.
+\end{example}
+
+\framebreak
+
+\begin{example}[Gamma GLMM]
+Consider the case where $y_{i,t}|u_i$ follows a gamma distribution and $\eta(z)=\log z$ (log link). In this case, we have
+$$
+y_{i,t}|u_i \overset{indep}\sim \mathcal{G}(1/\psi, \psi \cdot e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}), \quad \mathbb{E}[e^{u_i}]=1,
+$$
+so that $\log \mathbb{E}[y_{i,t}|u_i] = \mathbf{x}_{i,t}'\bm{\beta} + u_i$ and $\mathbb{E}[y_{i,t}|u_i] = e^{\mathbf{x}_{i,t}'\bm{\beta} + u_i}$.
+
+While it is not strictly required, we often assume that $\Theta_i := e^{u_i} \sim \mathcal{IG}(r+1, r)$ so that $\mathbb{E}[\Theta_i]=1$ and $\mathbb{V}ar(\Theta_i) = \frac{r}{r-1}$.
+\end{example}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{Estimation}
+
+\begin{itemize}
+	\item Due to the common random effect $u_i$ that affects all observations $y_{i,1}, \ldots, y_{i,n_i}$ simultaneously, $y_{i,1}, \ldots, y_{i,n_i}$ are not marginally independent.
+	\item So in the maximum likelihood estimation of $\bm{\beta}$, we need to consider the following joint densities $h(y_{i,1}, \ldots, y_{i,n_i})$, which is given as follows:
+	$$
+	h(y_{i,1}, \ldots, y_{i,n_i}) = \int \left[ \prod_{t=1}^{n_i} f(y_{i,t}|u_i) \right] \pi(u_i) du_i,
+	$$
+	where $\pi(u_i)$ is the PDF of $u_i$.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+	\item Therefore, the loglikelihood is given as follows:
+	\begin{align*}
+	\ell(\bm{\beta}) &= \sum_{i=1}^m \log h(y_{i,1}, \ldots, y_{i,n_i}; \mathbf{x}_{i,1}, \ldots, \mathbf{x}_{i,n_i} | \bm{\beta}) \\
+	&= \sum_{i=1}^m \log \int \left[ \prod_{t=1}^{n_i} f(y_{i,t}|u_i) \right] \pi(u_i) du_i,
+	\end{align*}
+	and the following score equation
+	$$
+	S(\bm{\beta}) = \frac{\partial}{\partial \bm{\beta}} \ell(\bm{\beta}) = 0
+	$$
+	is not easy to be explicitly obtained due to the integrals inside the summation.
+\end{itemize}
+
+\framebreak
+
+In general, $\ell(\bm{\beta})$ is not explicitly expressed without the integrals so one can consider the following ways for finding the MLE of $\bm{\beta}$:
+\begin{itemize}
+	\item EM algorithms: `pretend' that you have complete observations of $u_i$, and iterate to obtain the $\hat{\bm{\beta}}$,
+	\item The adaptive Gauss-Hermite approximation: approximate the integral as a finite sum and then evaluate the likelihood.
+\end{itemize}
+If we assume $u_i$ follows a normal distribution, then we can use the adaptive Gauss-Hermite approximation to find $\hat{\bm{\beta}}$ in \texttt{R} using a package (e.g., \texttt{glmer}).
+
+\framebreak
+
+For the remainder of this chapter, we focus on some special cases where we can obtain an explicit form of $\ell(\bm{\beta})$ with special combinations of $y_{i,t}|u_i$ and $u_i$ (or $y_{i,t}|\Theta_i$ and $\Theta_i$).
+\begin{itemize}
+	\item Normal-Normal GLMM:
+	\begin{align*}
+	y_{i,t}|u_i &\overset{indep}\sim \mathcal{N}(\mathbf{x}_{i,t}'\bm{\beta} + u_i, \sigma^2) \text{ for } t=1,\ldots, n_i, \\
+	u_i &\overset{indep}\sim \mathcal{N}(0, \phi_u) \text{ for } i=1,\ldots, m. \\
+	\Longrightarrow & \ \bm{y}_i \sim \mathcal{N}\left( \mathbf{x}_i \bm{\beta}, \, \phi_u \cdot J_{n_i} + \sigma^2 \cdot I_{n_i} \right),
+	\end{align*}
+	where $\bm{y}_i = (y_{i,1}, \ldots, y_{i,n_i})' \in \mathbb{R}^{n_i \times 1}$.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+	\item Poisson-gamma GLMM:
+	\begin{align*}
+	y_{i,t}|\Theta_i &\overset{indep}\sim \mathcal{P}(\Theta_i \cdot e^{\mathbf{x}_{i,t}'\bm{\beta}}) \text{ for } t=1,\ldots, n_i, \\
+	\Theta_i &\overset{indep}\sim \mathcal{G}(r, 1/r) \text{ for } i=1,\ldots, m. \\
+	\Longrightarrow & \ \bm{y}_i \text{ follows a \emph{multivariate negative binomial} distribution,}
+	\end{align*}
+	where $\bm{y}_i = (y_{i,1}, \ldots, y_{i,n_i})' \in \mathbb{R}^{n_i \times 1}$.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+	\item Gamma-inverse gamma GLMM:
+	\begin{align*}
+	y_{i,t}|\Theta_i &\overset{indep}\sim \mathcal{G}(1/\psi, \psi \cdot \Theta_i \cdot e^{\mathbf{x}_{i,t}'\bm{\beta}}) \text{ for } t=1,\ldots, n_i, \\
+	\Theta_i &\overset{indep}\sim \mathcal{IG}(r+1, r) \text{ for } i=1,\ldots, m. \\
+	\Longrightarrow & \ \bm{y}_i \text{ follows a \emph{multivariate generalized Pareto} distribution,}
+	\end{align*}
+\end{itemize}
+where $\bm{y}_i = (y_{i,1}, \ldots, y_{i,n_i})' \in \mathbb{R}^{n_i \times 1}$.
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[allowframebreaks]
+\frametitle{Poisson-gamma GLMM}
+
+\begin{theorem}[Fundamental Theorem of Calculus]
+Suppose $\frac{d}{dt}F(t) = f(t)$, then
+$$
+\int_a^b f(t) dt = F(b) - F(a).
+$$
+\end{theorem}
+
+\framebreak
+
+\begin{theorem}[Fundamental Theorem of the Loss Models(?)]
+If $\Gamma(r)$ is defined in the following way,
+$$
+\Gamma(r) = \int_0^\infty x^{r-1} e^{-x} dx,
+$$
+then $\Gamma(r) = (r-1)\Gamma(r-1)$.\\
+Especially, if $r$ is a natural number, then $\Gamma(r) = (r-1)!$.
+\end{theorem}
+
+\framebreak
+
+Now, we are ready to evaluate the joint PMF of $(y_{i,1}, \ldots, y_{i,n_i})$ in the case of Poisson-gamma GLMM, which is given as follows:
+$$
+h(y_{i,1}, \ldots, y_{i,n_i}) = \int \left[ \prod_{t=1}^{n_i} f(y_{i,t}|\theta_i) \right] \pi(\theta_i) d\theta_i,
+$$
+Recall that in the case of Poisson-gamma GLMM, we have
+\begin{align*}
+f(y_{i,t}|\theta_i) &= \frac{(\theta_i \nu_{i,t})^{y_{i,t}} e^{-\theta_i \nu_{i,t}}}{y_{i,t}!} \text{ for } t=1,\ldots, n_i, \\
+\pi(\theta_i) &= \frac{r^r}{\Gamma(r)} \theta_i^{r-1} e^{-r\theta_i},
+\end{align*}
+where $\nu_{i,t} = \exp\left(\mathbf{x}_{i,t}'\bm{\beta}\right)$.\\
+Can you see that $\mathbb{E}[\Theta_i] = \int_0^\infty \theta_i \pi(\theta_i) d\theta_i = 1$?
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Multivariate negative binomial distribution}
+\footnotesize
+
+Let us first define $\nu_{i,\bullet} = \sum_{t=1}^{n_i} \nu_{i,t}$ and $y_{i,\bullet} = \sum_{t=1}^{n_i} y_{i,t}$.
+\setlength{\abovedisplayskip}{4pt}\setlength{\jot}{2pt}
+\begin{align*}
+& h(y_{i,1}, \ldots, y_{i,n_i}) \\
+&= {\color{blue}\int_0^\infty} \left[ \prod_{t=1}^{n_i} f(y_{i,t}|{\color{blue}\theta_i}) \right] {\color{blue}\pi(\theta_i) d\theta_i} \\
+& \onslide<2->{= {\color{blue}\int_0^\infty} \left[ \prod_{t=1}^{n_i} \frac{({\color{blue}\theta_i} \nu_{i,t})^{y_{i,t}} e^{-{\color{blue}\theta_i} \nu_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} {\color{blue}\theta_i^{r-1} e^{-r\theta_i} d\theta_i},} \\
+& \onslide<3->{= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\int_0^\infty \left[ \prod_{t=1}^{n_i} (\theta_i)^{y_{i,t}} e^{-\theta_i \nu_{i,t}} \right] \theta_i^{r-1} e^{-r\theta_i} d\theta_i},} \\
+& \onslide<4->{= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\int_0^\infty \theta_i^{\sum_{t=1}^{n_i} y_{i,t} + r - 1} e^{-\theta_i (\sum_{t=1}^{n_i} \nu_{i,t} + r)} d\theta_i},} \\
+& \onslide<5->{= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\int_0^\infty \theta_i^{y_{i,\bullet} + r - 1} e^{-\theta_i (\nu_{i,\bullet} + r)} d\theta_i},}
+\end{align*}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Multivariate negative binomial distribution}
+
+By letting $u = \theta_i(\nu_{i,\bullet} + r)$, we have
+\begin{align*}
+&= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\int_0^\infty \theta_i^{y_{i,\bullet} + r - 1} e^{-\theta_i (\nu_{i,\bullet} + r)} d\theta_i}, \\
+& \onslide<2->{= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\frac{1}{(\nu_{i,\bullet} + r)^{y_{i,\bullet}+r}} \int_0^\infty u^{y_{i,\bullet} + r - 1} e^{-u} du},} \\
+& \onslide<3->{= \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\frac{\Gamma(y_{i,\bullet}+r)}{(\nu_{i,\bullet} + r)^{y_{i,\bullet}+r}}}!}
+\end{align*}
+
+\onslide<3->{After such a tedious calculation, we finally removed the integral from the joint PMF $h(y_{i,1}, \ldots, y_{i,n_i})$ and now ready to (eventually) write out $\ell(\bm{\beta})$ explicitly.}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[t]
+\frametitle{Poisson-gamma GLMM full loglikelihood}
+\footnotesize
+
+\vspace{-8pt}
+\setlength{\jot}{1pt}
+\begin{align*}
+\ell(\bm{\beta}) &= \sum_{i=1}^m \log h(y_{i,1}, \ldots, y_{i,n_i}; \mathbf{x}_{i,1}, \ldots, \mathbf{x}_{i,n_i} | \bm{\beta}) \\
+& \onslide<2->{= \sum_{i=1}^m \log \int \left[ \prod_{t=1}^{n_i} f(y_{i,t}|\theta_i) \right] \pi(\theta_i) d\theta_i} \\
+& \onslide<3->{= \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (y_{i,t} \log \nu_{i,t} - \log y_{i,t}!) + r \log r \right.} \\
+& \onslide<4->{\left. - \log \Gamma(r) + \log \Gamma(y_{i,\bullet}+r) - (y_{i,\bullet}+r)\log(\nu_{i,\bullet}+r) \right],} \\
+& \onslide<5->{{\color{purple} = \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (y_{i,t} \log \nu_{i,t}) - (y_{i,\bullet}+r)\log(\nu_{i,\bullet}+r) \right]}} \\
+& \onslide<6->{+ \sum_{i=1}^m \left[ \sum_{t=1}^{n_i} (-\log y_{i,t}!) + \log \Gamma(y_{i,\bullet}+r) \right] + mr\log r - m \log \Gamma(r)}
+\end{align*}
+
+\onslide<6->{Note that only {\color{purple}purple} part is relevant for the estimation of $\bm{\beta}$.}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Poisson-gamma GLMM full loglikelihood - in \texttt{R}}
+
+\begin{lstlisting}[language=R]
+"negll.MVNB" <- function(parm) {
+
+## declarations of variables
+p      <- ncol(x);
+beta   <- parm[1:p]
+r      <- parm[p+1]
+nu     <- exp(x %*% beta+log(offset));
+dat    <- cbind(id,nu,y);
+y_dot  <- aggregate(y~id,dat,sum)[,2]
+nu_dot <- aggregate(nu~id,dat,sum)[,2]
+m      <- length(unique(id))
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Poisson-gamma GLMM full loglikelihood - in \texttt{R}}
+
+\begin{lstlisting}[language=R]
+## full loglikelihood
+temp1 = sum(y*log(nu))
+                - sum( (y_dot+r)* log(nu_dot+r) )
+temp2 = -sum(lgamma(y+1)) + sum(lgamma(y_dot+r))
+                + m*r*log(r)-m*lgamma(r)
+result = -temp1-temp2
+return(result)
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Poisson-gamma GLMM full loglikelihood - in \texttt{R}}
+
+\begin{lstlisting}[language=R]
+## optimization in R
+init.est <- as.vector(c(init.beta, init.r))
+# init.est could be borrowed from marginal models
+
+fit.MVNB <- optim(init.est, negll.MVNB,
+                                 hessian=TRUE)
+
+beta.hat <- fit.MVNB$par[1:p]
+r.hat <- fit.MVNB$par[p+1]
+# r.hat should be positive!
+parm.stderr <- sqrt(diag(solve(fit.MVNB$hessian)))
+# parm.stderr should be positive!
+loglik.MVNB <- -fit.MVNB$value
+\end{lstlisting}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - simulation study}
+
+To confirm that the proposed Poisson-gamma GLMM properly works, we generate $\{y_{i,t}\}_{i=1,\ldots,50000, \, t=1,\ldots,6}$ as follows:
+\begin{gather*}
+y_{i,t}|\Theta_i \overset{indep.}\sim \mathcal{P}(\Theta_i \nu_{i,t}), \ \Theta_i \overset{i.i.d.}\sim \mathcal{G}(r, 1/r), \\
+x_{1,i,t} \sim \mathcal{N}(0,1), \ x_{2,i,t} \sim \mathcal{BN}(0.6),
+\end{gather*}
+and
+\begin{align*}
+\nu_{i,t} &= m_{i,t} \cdot e^{\mathbf{x}_{i,t}'\bm{\beta}} = \exp(\beta_0 + \beta_1 x_{1,i,t} + \beta_2 x_{2,i,t} + \log m_{i,t}), \\
+\beta_0 &= -2.5, \, \beta_1 = 1.5, \, \beta_2 = 0.20, \, r = 5.
+\end{align*}
+We use the data points from $t=1,\ldots,5$ for the estimation purpose, and those from $t=6$ for the out-of-sample validation purpose, respectively.
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - estimation results}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{Poisson} & \multicolumn{2}{c}{MVNB} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & Estimate & Std. Error & Estimate & Std. Error \\
+\midrule
+$\beta_0$ & -2.5063 & 0.0110 & -2.5053 & 0.0113 \\
+$\beta_1$ & 1.4963 & 0.0096 & 1.4959 & 0.0100 \\
+$\beta_2$ & 0.2115 & 0.0120 & 0.2104 & 0.0123 \\
+$r$ & - & - & 4.7422 & 0.2686 \\
+Loglikelihood & \multicolumn{2}{c}{-85028.36} & \multicolumn{2}{c}{-84811.28} \\
+AIC & \multicolumn{2}{c}{170062.71} & \multicolumn{2}{c}{169630.56} \\
+BIC & \multicolumn{2}{c}{170094.00} & \multicolumn{2}{c}{169647.42} \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - estimation results}
+
+We observe that
+\begin{itemize}
+	\item Interestingly, both the Poisson GLM and Poisson-gamma GLMM (MVNB) produce reliable results in the estimation of $\bm{\beta}$.
+	\item In fact, as long as the marginal mean is well-specified (here $\mathbb{E}[y_{i,t}] = \nu_{i,t}$ for both models), then $\hat{\bm{\beta}}$ is consistent (very close to the true $\bm{\beta}$ in case the sample size is very large). Such idea was extensively explored in the statistics literature, which is known as GEE (\href{https://en.wikipedia.org/wiki/Generalized_estimating_equation}{\color{cyan}Generalized estimating equation}, not \href{https://www.google.com/search?q=gee+snsd}{\color{cyan}this!}).
+	\item However, it is confirmed that the Poisson-gamma GLMM (MVNB) improves the goodness-of-fit significantly.
+\end{itemize}
+We will later analyze how these two models are working in terms of the out-of-sample validation (prediction).
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - prediction}
+
+Recall that we can obtain the joint probability function of $(y_{i,1}, \ldots, y_{i,n_i})$ as follows:
+$$
+h(y_{i,1}, \ldots, y_{i,n_i}) = \left[ \prod_{t=1}^{n_i} \frac{(\nu_{i,t})^{y_{i,t}}}{y_{i,t}!} \right] \frac{r^r}{\Gamma(r)} \times {\color{blue}\frac{\Gamma(y_{i,\bullet}+r)}{(\nu_{i,\bullet} + r)^{y_{i,\bullet}+r}}}.
+$$
+Can we compute the predictive probability function of ${\color{red}y_{i,n_i+1}}$ given $(y_{i,1}, \ldots, y_{i,n_i})$? \pause YES!
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - prediction}
+
+By using the conditioning argument, we have
+{\small
+\begin{align*}
+& f({\color{red}y_{i,n_i+1}}|y_{i,1}, \ldots, y_{i,n_i}) = \frac{h(y_{i,1}, \ldots, y_{i,n_i}, {\color{red}y_{i,n_i+1}})}{h(y_{i,1}, \ldots, y_{i,n_i})} \\
+&= \left[ \frac{(\nu_{i,n_i+1})^{y_{i,n_i+1}}}{y_{i,n_i+1}!} \right] \times \frac{(\nu_{i,\bullet}+r)^{y_{i,\bullet}+r}}{\Gamma(y_{i,\bullet}+r)} \times \frac{\Gamma(y_{i,\bullet} + {\color{red}y_{i,n_i+1}} + r)}{(\nu_{i,\bullet} + {\color{red}\nu_{i,n_i+1}} + r)^{y_{i,\bullet} + {\color{red}y_{i,n_i+1}} + r}} \\
+&= \frac{\Gamma(y_{i,\bullet} + {\color{red}y_{i,n_i+1}} + r)}{y_{i,n_i+1}!\Gamma(y_{i,\bullet}+r)} \times \\
+& \left( \frac{\nu_{i,\bullet}+r}{\nu_{i,\bullet} + {\color{red}\nu_{i,n_i+1}} + r} \right)^{y_{i,\bullet}+r} \left( \frac{{\color{red}\nu_{i,n_i+1}}}{\nu_{i,\bullet} + {\color{red}\nu_{i,n_i+1}} + r} \right)^{{\color{red}y_{i,n_i+1}}} \\
+&= \frac{\Gamma(y_{i,\bullet} + {\color{red}y_{i,n_i+1}} + r)}{y_{i,n_i+1}!\Gamma(y_{i,\bullet}+r)} \times \\
+& \left( \frac{1}{1 + {\color{red}\nu_{i,n_i+1}}/(\nu_{i,\bullet}+r)} \right)^{y_{i,\bullet}+r} \left( \frac{{\color{red}\nu_{i,n_i+1}}/(\nu_{i,\bullet}+r)}{1 + {\color{red}\nu_{i,n_i+1}}/(\nu_{i,\bullet}+r)} \right)^{{\color{red}y_{i,n_i+1}}}
+\end{align*}
+}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - prediction}
+
+Therefore, we can confirm that
+$$
+{\color{red}y_{i,n_i+1}} \, | \, y_{i,1}, \ldots, y_{i,n_i} \sim \mathcal{NB}\left( y_{i,\bullet} + r, \, \frac{{\color{red}\nu_{i,n_i+1}}}{\nu_{i,\bullet} + r} \right),
+$$
+so that
+$$
+\mathbb{E}[y_{i,n_i+1}|y_{i,1}, \ldots, y_{i,n_i}] = (y_{i,\bullet}+r) \cdot \frac{\nu_{i,n_i+1}}{\nu_{i,\bullet}+r} = \frac{y_{i,\bullet}+r}{\nu_{i,\bullet}+r} \cdot \nu_{i,n_i+1}.
+$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Poisson-gamma GLMM - prediction}
+
+We may interpret the above predictive premium as follows:
+\begin{align*}
+\mathbb{E}[y_{i,n_i+1}|y_{i,1}, \ldots, y_{i,n_i}] &= \frac{y_{i,\bullet}+r}{\nu_{i,\bullet}+r} \cdot \nu_{i,n_i+1} \\
+& \onslide<2->{= \mathbb{E}[\Theta_i|y_{i,1}, \ldots, y_{i,n_i}] \cdot \mathbb{E}[y_{i,n_i+1}]} \\
+\omit\rlap{\onslide<3->{$\displaystyle = \frac{\text{(actual past \# of claims)}}{\text{(expected past \# of claims)}} \times \text{(expected current \# of claims)}.$}}
+\end{align*}
+
+\onslide<3->{Therefore, the predictive premium from a Poisson-gamma GLMM also shares the spirit of \textbf{credibility} premium!}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Poisson GLM - prediction}
+
+In the case of a Poisson GLM, we assume that all the responses $\{y_{i,t}\}$ are independent so that $h(y_{i,1}, \ldots, y_{i,n_i}) = \prod_{t=1}^{n_i} f(y_{i,t})$, and
+\begin{align*}
+f({\color{red}y_{i,n_i+1}}|y_{i,1}, \ldots, y_{i,n_i}) &= \frac{h(y_{i,1}, \ldots, y_{i,n_i}, {\color{red}y_{i,n_i+1}})}{h(y_{i,1}, \ldots, y_{i,n_i})} \\
+& \onslide<2->{= \frac{\prod_{t=1}^{n_i+1} f(y_{i,t})}{\prod_{t=1}^{n_i} f(y_{i,t})} = f({\color{red}y_{i,n_i+1}}),}
+\end{align*}
+\onslide<2->{and subsequently
+$$
+\mathbb{E}[y_{i,n_i+1}|y_{i,1}, \ldots, y_{i,n_i}] = \mathbb{E}[y_{i,n_i+1}] = \nu_{i,n_i+1}.
+$$
+It implies that in the case of Poisson GLM, past observations \textbf{DO NOT} affect the future premium due to the (implicitly assumed) independence among the observed claims.}
+
+\end{frame}
+
+% ---------------------------------------------------------------------
+\begin{frame}
+\frametitle{Out-of-sample validation for claim frequency}
+
+It is natural to use the following measures, root-mean-squared error (RMSE) and Poisson deviance (PDEV) to assess the prediction performance:
+\begin{align*}
+\text{RMSE} : & \sqrt{\frac{1}{m} \sum_{i=1}^m (y_{i,T_i+1} - \hat{y}_{i,T_i+1})^2}, \\
+\text{PDEV} : & \frac{2}{m} \sum_{i=1}^m \left( y_{i,T_i+1} \log \frac{y_{i,T_i+1}}{\hat{y}_{i,T_i+1}} - y_{i,T_i+1} + \hat{y}_{i,T_i+1} \right).
+\end{align*}
+We prefer a model with lower RMSE/PDEV.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Out-of-sample validation for claim frequency}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr}
+\toprule
+ & Poisson & MVNB \\
+\midrule
+RMSE & 0.3565 & 0.3557 \\
+PDEV & 0.4595 & 0.4564 \\
+\hline\hline
+\end{tabular}
+\end{table}
+It is shown that usage of Poisson-gamma GLMM slightly improves the prediction performance.
+
+\end{frame}
+
+
+%======================================================================
+% Part 2
+%======================================================================
+\section{Credibility Premium with Static Random Effects}
+
+
+\begin{frame}
+\centering
+\Large\textbf{Part 2: Credibility premium of $S$\\ with the static random effects}
+\end{frame}
+
+\begin{frame}{P\&C Insurance Claim Data Structure}
+\begin{itemize}
+	\item Let $N$ be the number of accidents and $Y_1, \cdots, Y_N$ be the size of claim per accident.
+	\item For ratemaking in P\&C, we have to predict the cost of claims $S_{it}=\sum\limits_{k=1}^{N_{it}} Y_{itk}$.
+	\item Policyholder $i$ is followed over time $t=1,\ldots,T_i$ years.
+	\item Unit of analysis ``\textit{it}'' -- an insured driver $i$ over time $t$ (year)
+	\item For each ``\textit{it}'', could have several claims, $k=0,1,\ldots,N_{it}$
+	\item Have available information on: number of claims $N_{it}$, amount of claim $Y_{itk}$, exposure $e_{it}$ and covariates (explanatory variables) $x_{it}$
+	\begin{itemize}
+		\item covariates often include age, gender, vehicle type, building type, building location, driving history and so forth
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{The Two-Part Frequency-Severity Model}
+\begin{itemize}
+	\item We will model the pair $(N_{it}, C_{it})$ where
+	$$
+	C_{it} = \begin{cases}
+		\dfrac{1}{N_{it}} \sum\limits_{k=1}^{N_{it}} Y_{itk}, & N_{it} > 0 \\
+		\textit{Undefined}, & N_{it} = 0
+	\end{cases}
+	$$
+	is the observed average claim size and $S_{it}=\sum\limits_{k=1}^{N_{it}} Y_{itk}$ is the observed {\color{purple} aggregate claim size}.
+	\item The joint density of the {\color{purple} number of claims} and the {\color{purple} average claim size} can be decomposed as
+	\begin{eqnarray*}
+		f(N,C|\mathbf{x}) &=& f(N|\mathbf{x}) \times f(C|N,\mathbf{x}) \\
+		\text{joint} &=& \text{frequency} \ \times \ \text{average severity}.
+	\end{eqnarray*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Ratemaking with Predictive Analytics}
+\vfill
+$$
+\begin{array}{ll}
+	\text{[Observed]} & \{x_{it}, N_{it}, C_{it}, e_{it} | i=1,2,\ldots,I, t=1,2,\ldots,T_i\} \\
+	& \qquad\quad\ \ \Bigg\Downarrow \ \text{\color{purple}Calibrated Model} \ \Bigg\Downarrow \\
+	\text{[Predicted]} & \qquad\quad {\color{purple} N_{i,T_i+1},\, C_{i,T_i+1},\, \text{and } S_{i,T_i+1}}
+\end{array}
+$$
+\pause
+From now on, we drop the subscript $i$ for succinct expressions.
+\vfill
+\vfill
+\end{frame}
+
+\begin{frame}{Why Random Effects?}
+
+The following hypothetical example shows us that we might capture the
+\color{purple} unobserved heterogeneity in risk \color{black} by
+observing the residual after controlling for the effects of observed
+covariates, which can be explained in terms of \color{purple} random
+effects \color{black} for policyholders A and B.
+
+\begin{table}[h!t!]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{c|c|c|c|c|c|c|c}
+\multirow{2}{*}{Year} & \multirow{2}{*}{Gender} & \multirow{2}{*}{Age} & \multirow{2}{*}{Vehicle Size} & \multicolumn{2}{c|}{Policyholder A} & \multicolumn{2}{c}{Policyholder B} \\ \cline{5-8}
+                      &                         &                      &                               & \# of Claim      & Amt of Claim     & \# of Claim      & Amt of Claim     \\ \hline
+2015                  & M                       & 45                   & Medium                        & 0                & 0                & 1                & 500              \\
+2016                  & M                       & 46                   & Medium                        & 0                & 0                & 2                & 4000             \\
+2017                  & M                       & 47                   & Large                         & 1                & 200              & 1                & 8000             \\
+\end{tabular}}
+\end{table}
+Note that random effects model has a good connection with  \color{purple} credibility theory  \color{black} as well.
+\end{frame}
+
+\begin{frame}{Frequency Model Specifications}
+In actuarial practice, Poisson distribution has been used for the calibration of the number of claim with the presence of covariates as follows:
+\begin{equation}\label{p2:eq:pois}
+N_t|\mathbf{x}_t, e_t \overset{indep}{\sim} \mathcal{P}(\nu_t) \quad \text{where} \ \ \nu_t = e_t \exp(\mathbf{x}_t \alpha).
+\end{equation}
+Due to the longitudinal property of usual claim dataset, we may consider the following extension by incorporating random effects as follows:
+\begin{equation}\label{p2:eq:poisre}
+N_t|\theta^N \overset{indep}{\sim} \mathcal{P}(\nu_t \theta^N) \quad \text{where} \ \ \nu_t = e_t \exp(\mathbf{x}_t \alpha), \ \theta^N \sim \pi_N(\theta).
+\end{equation}
+\end{frame}
+
+\begin{frame}{Frequency Model Specifications}
+Let us consider the following frequency models:
+\begin{itemize}
+	\item For the count of claims (frequency)
+	\setbeamertemplate{enumerate items}[default]
+	\begin{enumerate}[(1)]
+		\item Simple Poisson GLM: $N_t \sim \text{Pois}(e^{\mathbf{x}_t \alpha})$ so that $\E{N_t|\mathbf{x}_t} = e^{\mathbf{x}_t\alpha}$.
+		\item {\color{blue} Poisson/Gamma Random Effect Model (= Multivariate NB Model)}
+	\end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Poisson/Gamma Random Effect Model}
+Data likelihood: $N_t|\theta^N \overset{indep}{\sim} \mathcal{P}(\nu_t \theta^N)$ \\
+Prior density: $\pi_N(\theta) \propto \theta^{r-1}e^{-\theta r}$ so that $\theta^N \sim \mathcal{G}(r,r)$ and $\E{\theta^N}=1, \Var{\theta^N}=\frac{1}{r}$. \\
+Posterior density: \\
+$\theta^N|n_1, n_2, \ldots, n_T \sim \mathcal{G}(\sum_{t=1}^T n_t + r, \sum_{t=1}^T \nu_t + r)$ \\
+{\color{purple} Predictive distribution:}
+\begin{equation}\label{p2:eq:mvnb}
+N_{T+1}|n_1, n_2, \ldots, n_T \sim \mathcal{NB}\left(\sum_{t=1}^T n_t + r, \frac{\nu_{T+1}}{\sum_{t=1}^T \nu_t + r}\right)
+\end{equation}
+so that $\E{N_{T+1}|n_1, n_2, \ldots, n_T} = \frac{\sum_{t=1}^T n_t + r}{\sum_{t=1}^T \nu_t + r}\nu_{T+1}$.
+\end{frame}
+
+\begin{frame}{Implication of the Frequency Credibility Premium}
+\begin{itemize}
+	\item We can see that
+	\begin{align*}
+		&\E{N_{T+1}|\mathcal{F}_T} = \frac{r+{\color{purple}\sum_{t=1}^T n_t}}{r+{\color{purple}\sum_{t=1}^T \exp(\mathbf{x}_t\alpha)}} \times \exp(\mathbf{x}_{T+1}\alpha) \\
+		&= \frac{\text{(actual past \# of claims)}}{\text{(expected past \# of claims)}} \times \text{(expected current \# of claims)}.
+	\end{align*}
+	\item In this sense, use of random effects helps us to penalize/reward a policyholder based on his/her driving experience.
+	\item What about $\E{S_{T+1}|\mathcal{F}_T}$?
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Static Credibility Premium for S when $N \perp C$}
+Frangos and Vrontos (2001) derived the following formula for (static) credibility premium of $S$ assuming $N \perp C$.
+\begin{theorem}
+Suppose $(N_1, N_2, \ldots, N_T)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that $\E{C_t|n_t} = \theta^C e^{\mathbf{x}_t \beta} = \theta^C \tilde{\mu}_t$. Then credibility premium of $S_{T+1}$ given $n_1, \ldots, n_T, c_1, \ldots, c_T$ is given as follows:
+\begin{align*}
+\mathbb{E}[S_{T+1}|\mathcal{F}_T] &= \mathbb{E}[N_{T+1}|n_1, \ldots, n_T] \times \mathbb{E}[C_{T+1}|\mathcal{F}_T] \\
+&= \text{\emph{Cred. Freq. mean}} \ \times \text{\emph{Cred. Sev. mean}}
+\end{align*}
+\end{theorem}
+\pause
+{\color{purple} What if $N \not\perp C$?}
+\end{frame}
+
+\begin{frame}{Cross-sectional Dependence between $N$ and $C$}
+Inspired by Garrido et al. (2016), we assume a specific form of cross-sectional dependence between $N_t$ and $C_t$ as follows:
+\begin{equation}\label{p2:eq:crossdep}
+\begin{aligned}
+&N_t|\theta^N \overset{indep}{\sim} \mathcal{P}(\nu_t \theta^N) \quad \text{where} \ \ \nu_t = e_t \exp(\mathbf{x}_t \alpha), \ \theta^N \sim \mathcal{G}(r,r). \\
+&C_t|\theta^C, n_t \overset{indep}{\sim} \mathcal{G}\left(\frac{n_t}{\psi}, \frac{n_t}{\psi\theta^C\mu_t}\right) \quad \text{where} \ \ \mu_t = \tilde{\mu}_t e^{{\color{purple}\gamma n_t}} = \exp(\mathbf{x}_t\beta + {\color{purple}\gamma n_t}), \\
+&\theta^C \sim \mathcal{IG}(k+1,k).
+\end{aligned}
+\end{equation}
+Since $\mu_t = \exp(\mathbf{x}_t\beta + {\color{purple}\gamma n_t})$, \\
+$\E{S_t|\theta^N, \theta^C} \neq \E{N_t|\theta^N}\E{C_t|\theta^C, n_t}$.
+\end{frame}
+
+\begin{frame}{Severity Model Specifications}
+Let us consider the following severity models:
+\begin{itemize}
+	\item For the average size of claims (severity)
+	\setbeamertemplate{enumerate items}[default]
+	\begin{enumerate}[(1)]
+		\item Simple Gamma GLM: $C_t|n_t \sim \mathcal{G}(\frac{n_t}{\psi}, \frac{n_t}{\psi\mu_t})$ so that $\E{C_t|n_t, \mathbf{x}_t} = \mu_t = \tilde{\mu}_t e^{\gamma n_t}$ and $\frac{\Var{C_t|n_t, \mathbf{x}_t}}{\E{C_t|n_t, \mathbf{x}_t}^2} = \frac{\psi}{n_t}$
+		\item {\color{blue} Gamma/I-gamma Random Effect Model (= Multivariate GP Model)}
+	\end{enumerate}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Gamma/I-gamma Random Effects Model}
+Data likelihood: $C_t|\theta^C \overset{indep}{\sim} \mathcal{G}\left(\frac{n_t}{\psi}, \frac{n_t}{\psi\theta^C\mu_t}\right)$ \\
+Prior density: $\pi_C(\theta) \propto \theta^{-k-2}e^{-k/\theta}$ so that $\theta^C \sim \mathcal{IG}(k+1,k)$ and $\E{\theta^C}=1, \Var{\theta^C}=\frac{1}{k-1}$. \\
+Posterior density: \\
+$\theta^C|\mathcal{F}_T \sim \mathcal{IG}(k+\sum_{t=1}^T n_t/\psi + 1, k+\sum_{t=1}^T \frac{s_t}{\psi\mu_t})$. \\
+Note that $s_t = n_t \cdot c_t$ by definition.
+\end{frame}
+
+\begin{frame}{Gamma/I-gamma Random Effects Model}
+\textcolor{purple}{Predictive distribution:}
+\begin{align*}
+&C_{T+1}|\mathcal{F}_T, n_{T+1} \\
+&\sim \mathcal{GP}\left(k + \sum_{t=1}^T n_t/\psi + 1, \left[k + \sum_{t=1}^T \frac{s_t}{\psi\mu_t}\right]\frac{\psi\mu_{T+1}}{n_{T+1}}, \frac{n_{T+1}}{\psi}\right),
+\end{align*}
+with predictive mean
+$$
+\E{C_{T+1}|n_{T+1}, \mathcal{F}_T} = \frac{\left[k\psi + \sum_{t=1}^T s_t/\mu_t\right]}{k\psi + \sum_{t=1}^T n_t}\mu_{T+1}.
+$$
+\end{frame}
+
+\begin{frame}{GP and GB2 Distributions}
+\begin{itemize}
+	\item $Y \sim \mathcal{GP}(a, \xi, \tau)$
+	$$
+	\Longrightarrow \quad f(y|a,\xi,\tau) = \frac{\Gamma(a+\tau)}{\Gamma(a)\Gamma(\tau)}\frac{\xi^a y^{\tau-1}}{(y+\xi)^{a+\tau}}
+	$$
+	\item $Y \sim \mathcal{GB}2(a, \xi, \tau, p)$
+	$$
+	\Longrightarrow \quad f(y|a,\xi,\tau,p) = \frac{\Gamma(a+\tau)}{\Gamma(a)\Gamma(\tau)}|p|\frac{\xi^{ap} y^{\tau p-1}}{(y^p+\xi^p)^{a+\tau}}
+	$$
+	\item Note that GP distribution is a special case of GB2 distribution where $p=1$. (Loss Models, Klugman et al. 2012)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Static Credibility Premium for S when $N \not\perp C$}
+\begin{theorem}
+Suppose $(N_1, N_2, \ldots, N_T)$ follows MVNB distribution as defined in \eqref{p2:eq:mvnb}. Moreover, let us assume that \\
+$\E{C_t|n_t} = \theta^C e^{\mathbf{x}_t\beta}\, {\color{purple}e^{n_t\gamma}} = \theta^C \tilde{\mu}_t\, {\color{purple}e^{n_t\gamma}}$. Then, the credibility premium of $S_{T+1}$ is given as follows:
+\begin{equation}\label{p2:eq:credS}
+\begin{aligned}
+\E{S_{T+1}|\mathcal{F}_T} &= \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_T}} \\
+&\quad \times e^\gamma\left[1-\left(\frac{\nu_{T+1}}{\sum_{t=1}^T \nu_t + r}\right)(e^\gamma - 1)\right]^{-\sum_{t=1}^T n_t - r - 1}.
+\end{aligned}
+\end{equation}
+If $\gamma=0$, then \eqref{p2:eq:credS} is reduced as in Frangos and Vrontos (2001):
+$$
+\E{S_{T+1}|\mathcal{F}_T} = \E{\tilde{\mu}_{T+1}\theta^C|\mathcal{F}_T} \times \E{\nu_{T+1}\theta^N|\underline{n_T}}.
+$$
+\end{theorem}
+\end{frame}
+
+\begin{frame}{Static Credibility Premium for S when $N \not\perp C$}
+\begin{itemize}
+	\item According to the theorem, it can be observed that the \textbf{static} credibility premium of $S_{T+1}$ can be expressed as the product of
+	\begin{itemize}
+		\item {\color{purple}\textbf{static} credibility premium of $N_{T+1}$,}
+		\item {\color{purple}\textbf{static} credibility premium of $C_{T+1}$,} and
+		\item {\color{purple}adjustment factor which accounts for the dependence between frequency and the average severity.}
+	\end{itemize}
+	\item Under the MVNB distribution defined in \eqref{p2:eq:mvnb}, we have the following:
+	$$
+	\E{\nu_{T+1}\theta^N|\underline{n_T}} = \frac{r+\sum_{t=1}^T n_t}{r+\sum_{t=1}^T \nu_t}\nu_{T+1}.
+	$$
+	\item For convenience, let us denote \\
+	$D_N(\gamma) = e^\gamma\left[1-\left(\frac{\nu_{T+1}}{\sum_{t=1}^T \nu_t + r}\right)(e^\gamma - 1)\right]^{-\sum_{t=1}^T n_t - r - 1}$ so that $D_N(0)=1$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Credibility Premium for the Compound Sum when $N \not\perp C$}
+\begin{theorem}
+For $D_N(\gamma)$ in \eqref{p2:eq:credS}, the following are true:
+\setbeamertemplate{enumerate items}[default]
+\begin{enumerate}[(i)]
+	\item $D_N(\gamma)$ is well-defined if and only if $\gamma \leq \log\left(1+\frac{r+\sum_{t=1}^T \nu_t}{\nu_{T+1}}\right)$.
+	\item $D_N(\gamma)$ is a strictly increasing function of $\gamma$.
+	\item
+	\small
+	$$
+	D_N(\gamma) = e^\gamma\left[1-\left(\frac{\nu_{T+1}}{r+\sum_{t=1}^T \nu_t}\right)(e^\gamma - 1)\right]^{-r-\sum_{t=1}^T n_t - 1}
+	\begin{cases}
+		=1 & \text{\emph{if}} \quad \gamma = 0 \\
+		>1 & \text{\emph{if}} \quad \gamma > 0 \\
+		<1 & \text{\emph{if}} \quad \gamma < 0
+	\end{cases}
+	$$
+\end{enumerate}
+\end{theorem}
+In this regard, $D_N(\gamma)$ can be interpreted as an {\color{purple} informative measure of dependence} which considers not only the sign of dependence but also the magnitude of dependence.
+\end{frame}
+
+%======================================================================
+% Part 3
+%======================================================================
+\section{Credibility Premium with Dynamic Random Effects}
+
+
+\begin{frame}
+\centering
+\Large\textbf{Part 3: Credibility premium of $S$ with the dynamic random effects}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Static Frequency Credibility Premium}
+\begin{itemize}
+\item Recall that in Part 1, the frequency credibility premium is given as follows:
+\begin{align*}
+&\E{N_{T+1}|\mathcal{F}_T} = \frac{r+\textcolor{purple}{\sum_{t=1}^T n_t}}{r+\textcolor{purple}{\sum_{t=1}^T \exp(\mathbf{x}_t\alpha)}}\times \exp(\mathbf{x}_{T+1}\alpha) \\
+&= \frac{\text{(actual past \# of claims)}}{\text{(expected past \# of claims)}} \times \text{(expected current \# of claims)}.
+\end{align*}
+\pause
+\item In this sense, using \textbf{static} random effects is somewhat equivalent to use
+\textcolor{purple}{aggregated} actual/expected \# of claims for adjustments.
+\pause
+\item However, it means that there is \textcolor{purple}{no distinction on the age of claims.}
+(i.e., $n_1=1$ or $n_5=1$ ends up with the same impacts in the credibility premium.)
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Disclaimer: STATIC Random Effects Models}
+\begin{itemize}
+\item In the formulation, we assumed that the random effect $\theta_i$ is
+\textcolor{purple}{random but STATIC}. In other words, it is hard to capture possible evolution
+on the unobserved heterogeneity in risks over time with such model.
+\pause
+\item This assumption leads to the predictive premium formula which assigns
+\textcolor{purple}{the same weight for every $n_t$, $t=1,\ldots,T$}.
+\pause
+\item One can suggest \textcolor{purple}{DYNAMIC random effects} compound risk models (CRMs) to capture
+\textcolor{purple}{possible evolution on the unobserved heterogeneity}, which follows in the later part of this presentation.
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Key Idea of Static Random Effects CRMs}
+$$
+\begin{array}{ccccccc}
+\cdots & = & \theta^N & = & \theta^N & = & \theta^N \quad = \\
+\textcolor{teal}{\downarrow} & & \textcolor{teal}{\downarrow} & & \textcolor{teal}{\downarrow} & & \textcolor{teal}{\downarrow} \\
+\cdots & & N_{t-1} & & N_t & & N_{t+1} \\
+ & & \textcolor{olive}{\Downarrow} & & \textcolor{olive}{\Downarrow} & & \textcolor{olive}{\Downarrow} \\
+\cdots & & C_{t-1} & & C_t & & C_{t+1} \\
+\textcolor{teal}{\uparrow} & & \textcolor{teal}{\uparrow} & & \textcolor{teal}{\uparrow} & & \textcolor{teal}{\uparrow} \\
+\cdots & = & \theta^C & = & \theta^C & = & \theta^C \quad =
+\end{array}
+$$
+\pause
+\begin{itemize}
+\item \textcolor{teal}{$\theta^N_{\phantom{t-1}}$ determines the conditional distribution of $N_{t-1}$ (respectively, C).}
+\pause
+\item \phantom{\parbox[t]{\linewidth}{$\theta^N_{t-1}$ and $N_{t-1}$ affect the filtering distribution of $\theta^N_t$ (respectively, C).}}
+\pause
+\item \textcolor{olive}{$N_t$ is assumed to have cross-sectional dependence with $C_t$.}
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Key Idea of Dynamic Random Effects CRMs}
+$$
+\begin{array}{cccccccc}
+\cdots & \textcolor{violet}{\longrightarrow} & \theta^N_{\textcolor{blue}{t-1}} & \textcolor{violet}{\longrightarrow} & \theta^N_{\textcolor{blue}{t}} & \textcolor{violet}{\longrightarrow} & \theta^N_{\textcolor{blue}{t+1}} & \textcolor{violet}{\longrightarrow} \\
+\textcolor{teal}{\downarrow} & \textcolor{violet}{\nearrow} & \textcolor{teal}{\downarrow} & \textcolor{violet}{\nearrow} & \textcolor{teal}{\downarrow} & \textcolor{violet}{\nearrow} & \textcolor{teal}{\downarrow} & \\
+\cdots & & N_{t-1} & & N_t & & N_{t+1} & \\
+ & & \textcolor{olive}{\Downarrow} & & \textcolor{olive}{\Downarrow} & & \textcolor{olive}{\Downarrow} & \\
+\cdots & & C_{t-1} & & C_t & & C_{t+1} & \\
+\textcolor{teal}{\uparrow} & \textcolor{violet}{\searrow} & \textcolor{teal}{\uparrow} & \textcolor{violet}{\searrow} & \textcolor{teal}{\uparrow} & \textcolor{violet}{\searrow} & \textcolor{teal}{\uparrow} & \\
+\cdots & \textcolor{violet}{\longrightarrow} & \theta^C_{\textcolor{blue}{t-1}} & \textcolor{violet}{\longrightarrow} & \theta^C_{\textcolor{blue}{t}} & \textcolor{violet}{\longrightarrow} & \theta^C_{\textcolor{blue}{t+1}} & \textcolor{violet}{\longrightarrow}
+\end{array}
+$$
+\pause
+\begin{itemize}
+\item \textcolor{teal}{$\theta^N_{\textcolor{blue}{t-1}}$ determines the conditional distribution of $N_{t-1}$ (respectively, C).}
+\pause
+\item \textcolor{violet}{$\theta^N_{\textcolor{blue}{t-1}}$ and $N_{t-1}$ affect the filtering distribution of $\theta^N_{\textcolor{blue}{t}}$ (respectively, C).}
+\pause
+\item \textcolor{olive}{$N_t$ is assumed to have cross-sectional dependence with $C_t$.}
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Building Blocks for Dynamic Random Effects CRMs}
+\begin{itemize}
+\item<2-> Innovation of the dynamic (gamma) random effects (Lukacs, 1955),
+\item<3-> Frequency dynamic random effects models (Harvey and Fernandez, 1989),
+\item<4-> Severity dynamic random effects models (Smith and Miller, 1986), and
+\item<5-> Cross-sectional dependence between the frequency and severity (Garrido et al., 2016; Jeong and Valdez, 2020).
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Innovation for the Dynamic Random Effects}
+\begin{lemma}[Lukacs, 1955]
+Given two independent random variables $\theta_t \sim \mathcal{G}(u,v)$ and $Z_t \sim \mathcal{B}(wu,(1-w)u)$,
+where $u>0, v>0, w \in (0,1)$ are constants, we have
+$$
+\theta_{t+1} := \frac{Z_t\theta_t}{w} \sim \mathcal{G}(wu, wv).
+$$
+\end{lemma}
+\pause
+\begin{itemize}
+\item $\theta_t$: the dynamic random effect at time $t$,
+\pause
+\item $Z_t$: source of (random) innovation at time $t$ for the random effect.
+\pause
+\item It is easy to check that $\text{Cor}(\theta_t, \theta_{t+1}) = w$.
+\end{itemize}
+\pause
+Indeed, if $w=1$, then $Z_t$ is almost surely 1 so that $\theta_{t+1}=\theta_t$, which is equivalent to the \textbf{static} random effects case.
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Frequency Dynamic Random Effects (HF, 1989)}
+The joint dynamics of the count (i.e. frequency) $N_t$ and the random effect $\theta^N_t$ is as follows:
+\setbeamertemplate{enumerate items}[default]
+\begin{enumerate}[i.]
+\item (Updating rule of $\theta^N_t$) Assume that at time $t>1$, the filtering distribution of $\theta^N_{t-1}$
+given the past observations\footnote{We similarly define
+$$
+\underline{A_t} := (A_1,\cdots,A_t), \quad \underline{\theta^N_t} := (\theta^N_1,\cdots,\theta^N_t) \quad \text{and} \quad \underline{\nu_t} := (\nu_1,\cdots,\nu_t).
+$$}
+$\underline{n_{t-1}} := (n_1,\cdots,n_{t-1})$ is given by
+$$
+\theta^N_{t-1}|\underline{n_{t-1}} \sim \mathcal{G}\left(r_{t-1}, r'_{t-1}\right),
+$$
+where $r_1 = r'_1 = r$ and $r_{t-1}$, $r'_{t-1}$ are \textcolor{purple}{positive, deterministic functions of past counts and exogenous covariates observed up to time $t-1$}.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Frequency Dynamic Random Effects (HF, 1989)}
+Then the new state variable $\theta^N_t$ is defined by
+$$
+\theta^N_t := \frac{\theta^N_{t-1}A_t}{p},
+$$
+where $p \in (0,1)$ is a predetermined constant and $A_t$ has the following predictive distribution:
+$$
+A_t \,|\, \underline{A_{t-1}}, \underline{n_{t-1}}, \underline{\theta^N_{t-1}} \sim \mathcal{B}\left(pr_{t-1}, (1-p)r_{t-1}\right).
+$$
+Note that the conditional distribution of $\theta^N_t$ given $\underline{n_{t-1}}$, called the predictive distribution, is given by:
+\begin{equation}\label{p3:freqpred}
+\theta^N_t|\underline{n_{t-1}} \sim \mathcal{G}\left(pr_{t-1}, pr'_{t-1}\right).
+\end{equation}
+\end{frame}
+
+\begin{frame}{Frequency Dynamic Random Effects (HF, 1989)}
+\setbeamertemplate{enumerate items}[default]
+\begin{enumerate}[i.]
+\setcounter{enumi}{1}
+\item (Observation at time $t$) Given $\underline{n_{t-1}}$ and $\underline{\theta^N_t}$, observation $N_t$ has the following conditional distribution:
+$$
+N_t|\underline{n_{t-1}}, \underline{\theta^N_t} \sim \mathcal{P}\left(\nu_t\theta^N_t\right),
+$$
+where $\nu_t$ is a \textcolor{purple}{positive, deterministic function of exogenous covariates observed at time $t$}.
+Thus by the Poisson-gamma conjugacy, the filtering distribution of $\theta^N_t$ given $\underline{n_t}$ is given by:
+\begin{equation}\label{p3:freqfilt}
+\theta^N_t|\underline{n_t} \sim \mathcal{G}\left(r_t, r'_t\right),
+\end{equation}
+with
+$$
+r_t := pr_{t-1} + n_t > 0 \quad and \quad r'_t := pr'_{t-1} + \nu_t > 0.
+$$
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Frequency Dynamic Random Effects (HF, 1989)}
+\begin{itemize}
+\item An immediate consequence is the following relationships concerning the predictive mean and variance of the random effect:
+$$
+\resizebox{\linewidth}{!}{$\displaystyle
+\E{\theta^N_t \,|\, \underline{n_{t-1}}} = \E{\theta^N_{t-1} \,|\, \underline{n_{t-1}}}, \Var{\theta^N_t \,|\, \underline{n_{t-1}}} = \frac{1}{p}\Var{\theta^N_{t-1} \,|\, \underline{n_{t-1}}}.$}
+$$
+\item Thus, updating $\theta^N_{t-1}$ to $\theta^N_t$ has the effect of preserving the mean (as well as the parametric form of the distribution) when passing from the filtering distribution to the predictive distribution.
+\item It introduces extra ``uncertainty'', through the multiplicative ``innovation'' $\frac{A_t}{p}$, which is of unit mean.
+This transition has also the effect of inflating the variance by a factor of $1/p$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Frequency Dynamic Random Effects (HF, 1989)}
+One can check that $N_{T+1}\,|\,\underline{n_T}$ still follows a negative binomial distribution with the following predictive mean:
+{\small
+\begin{equation}\label{p3:freqmean}
+\begin{gathered}
+\E{N_{T+1}\,|\,\underline{n_T}} = \nu_{T+1}\frac{r_T}{r'_T}
+= \nu_{T+1}\frac{\sum\limits_{t=1}^T p^{T-t}n_t + p^Tr}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr}
+= \nu_{T+1}\left[a_0 + \sum_{t=1}^T a_t \frac{n_t}{\nu_t}\right], \\
+\text{with } a_0 := \frac{p^Tr}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr} \quad \text{and} \quad
+a_t := \frac{p^{T-t}\nu_t}{\sum\limits_{t=1}^T p^{T-t}\nu_t + p^Tr}.
+\end{gathered}
+\end{equation}
+}
+\pause
+\textcolor{purple}{What if $p=1$?}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
+The joint dynamics of the average claim amounts (i.e. severity) $C_t$ and the random effect $\theta^C_t$ is:
+\setbeamertemplate{enumerate items}[default]
+\begin{enumerate}[i.]
+\item (Updating rule of $\theta^C_t$) Assume that at time $t>1$, the filtering distribution of $\theta^C_{t-1}$
+given the past observations\footnote{We similarly define
+$$
+\underline{B_t} := (B_1,\cdots,B_t), \quad \underline{\theta^C_t} := (\theta^C_1,\cdots,\theta^C_t) \quad \text{and} \quad \underline{\mu_t} := (\mu_1,\cdots,\mu_t).
+$$}
+$\underline{c_{t-1}} := (c_1,\cdots,c_{t-1})$ and $\underline{n_{t-1}}$ is given by
+$$
+\theta^C_{t-1}|\underline{c_{t-1}}, \underline{n_{t-1}} \sim \mathcal{IG}\left(k_{t-1}, k'_{t-1}\right),
+$$
+where $k_1 - 1 = k'_1 = k$ and $k_{t-1}$, $k'_{t-1}$ are \textcolor{purple}{positive, deterministic functions of past counts and exogenous covariates observed up to time $t-1$}.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
+Then the new state variable $\theta^C_t$ is defined by
+$$
+\theta^C_t := \frac{\theta^C_{t-1}q^*_t}{B_t},
+$$
+where $q^*_t = \frac{q(k_{t-1}-2)+1}{k_{t-1}-1} \in (0,1)$ and $B_t$ has the following predictive distribution:
+$$
+B_t \,|\, \underline{B_{t-1}}, \underline{c_{t-1}}, \underline{n_{t-1}}, \underline{\theta^C_{t-1}} \sim \mathcal{B}\left(q_tk_{t-1}, (1-q_t)k_{t-1}\right),
+$$
+with $q_t = \frac{q(k_{t-1}-2)+2}{k_{t-1}} \in (2/k_{t-1}, 1)$.\\
+Note that the conditional distribution of $\theta^C_t$ given $\underline{c_{t-1}}$, called the predictive distribution, is given by:
+\begin{equation}\label{p3:sevpred}
+\theta^C_t|\underline{c_{t-1}}, \underline{n_{t-1}} \sim \mathcal{IG}\left(q_tk_{t-1}, q^*_tk'_{t-1}\right).
+\end{equation}
+\end{frame}
+
+\begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
+\setbeamertemplate{enumerate items}[default]
+\begin{enumerate}[i.]
+\setcounter{enumi}{1}
+\item (Observation at time $t$) Given $\underline{c_{t-1}}$, $\underline{n_t}$, and $\underline{\theta^C_t}$, observation $C_t$ has the following conditional distribution:
+$$
+C_t|\underline{c_{t-1}}, \underline{n_t}, \underline{\theta^C_t} \sim \mathcal{G}\left(\frac{n_t}{\psi}, \frac{n_t}{\psi\mu_t\theta^C_t}\right),
+$$
+where $\mu_t$ is a \textcolor{purple}{positive, deterministic function of exogenous covariates observed at time $t$}.
+Thus by the gamma-IG conjugacy, the filtering distribution of $\theta^C_t$ given $\underline{c_t}$ and $\underline{n_t}$ is given by:
+\begin{equation}\label{p3:sevfilt}
+\theta^C_t|\underline{c_t}, \underline{n_t} \sim \mathcal{IG}\left(k_t, k'_t\right),
+\end{equation}
+with
+$$
+k_t := q_tk_{t-1} + n_t/\psi > 0 \quad and \quad k'_t := q^*_tk'_{t-1} + \frac{s_t}{\psi\mu_t} > 0.
+$$
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
+\begin{itemize}
+\item An immediate consequence is the following relationships concerning the predictive mean and variance of the random effect:
+$$
+\resizebox{\linewidth}{!}{$\displaystyle
+\E{\theta^C_t \,|\, \mathcal{F}_{t-1}} = \E{\theta^C_{t-1} \,|\, \mathcal{F}_{t-1}}, \Var{\theta^C_t \,|\, \mathcal{F}_{t-1}} = \frac{1}{q}\Var{\theta^C_{t-1} \,|\, \mathcal{F}_{t-1}}.$}
+$$
+\item Thus, updating $\theta^C_{t-1}$ to $\theta^C_t$ has the effect of preserving the mean (as well as the parametric form of the distribution) when passing from the filtering distribution to the predictive distribution.
+\item It introduces extra ``uncertainty'', through the multiplicative ``innovation'' $\frac{B_t}{q}$, which is of unit mean.
+This transition has also the effect of inflating the variance by a factor of $1/q$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Severity Dynamic Random Effects (SM, 1986)}
+One can check that $C_{T+1}\,|\,\mathcal{F}_T, n_{T+1}$ still follows a GP distribution with the following predictive mean:
+\begin{equation}\label{p3:sevmean}
+\begin{gathered}
+\E{C_{T+1}\,|\,\mathcal{F}_T, n_{T+1}} = \mu_{T+1}\frac{k'_T}{k_T-1}
+= \mu_{T+1}\left[b_0 + \sum_{t=1}^T b_t\frac{s_t}{\mu_t}\right], \\
+\text{with } b_0 := \frac{k\prod_{s=1}^T q^*_s}{k_T-1} \quad \text{and} \quad
+b_t := \frac{\prod_{s=t+1}^T q^*_s/\psi}{k_T-1}.
+\end{gathered}
+\end{equation}
+\pause
+\textcolor{purple}{What if $q=1$? (Note that $q^*_s=q_s=1$ for all $s$ if $q=1$, by definition)}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Dynamic Credibility Premium for S when $N \not\perp C$}
+\begin{theorem}
+Suppose the predictive means of $N_{T+1}$ and $C_{T+1}$ are given as in (\ref{p3:freqmean}) and (\ref{p3:sevmean}), respectively.
+Then, the (dynamic) credibility premium of $S_{T+1}$ is given as follows:
+\begin{equation}\label{p3:dynS}
+\begin{split}
+\E{S_{T+1}|\mathcal{F}_T} &= \tilde{\mu}_{T+1}\frac{k'_T}{k_T-1} \times \nu_{T+1}\frac{r_T}{r'_T} \\
+&\quad \times e^\gamma\left[1-\left(\frac{\nu_{T+1}}{r'_T}\right)(e^\gamma-1)\right]^{-r_T-1}.
+\end{split}
+\end{equation}
+If $\gamma=0$, then (\ref{p3:dynS}) is reduced as follows:
+$$
+\E{S_{T+1}|\mathcal{F}_T} = \tilde{\mu}_{T+1}\frac{k'_T}{k_T-1} \times \nu_{T+1}\frac{r_T}{r'_T}.
+$$
+\end{theorem}
+\end{frame}
+
+\begin{frame}{Dynamic Credibility Premium for S when $N \not\perp C$}
+\begin{itemize}
+\item According to the theorem, it can be observed that the \textbf{dynamic} credibility premium of $S_{T+1}$ can be expressed as the product of
+\begin{itemize}
+\item \textcolor{purple}{\textbf{dynamic} credibility premium of $N_{T+1}$},
+\item \textcolor{purple}{\textbf{dynamic} credibility premium of $C_{T+1}$}, and
+\item \textcolor{purple}{adjustment factor which accounts for the dependence between frequency and the average severity.}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Data}
+\rmfamily
+We use Wisconsin Local Government Property Insurance Fund (LGPIF) dataset.
+While claim information on multiple lines of business is available, we focus on IM (inland marine) claims and their associated policy characteristics from the selected dataset.
+
+\vspace{1em}
+\centering
+\scriptsize
+\begin{tabular}{l|lrrr}
+\hline
+\makecell[l]{Categorical\\variables} & Description & & \multicolumn{2}{c}{Proportions} \\
+TypeCity & Indicator for city entity: & Y=1 & \multicolumn{2}{c}{14.51 \%} \\
+TypeCounty & Indicator for county entity: & Y=1 & \multicolumn{2}{c}{5.92 \%} \\
+TypeMisc & Indicator for miscellaneous entity: & Y=1 & \multicolumn{2}{c}{10.78 \%} \\
+TypeSchool & Indicator for school entity: & Y=1 & \multicolumn{2}{c}{29.1 \%} \\
+TypeTown & Indicator for town entity: & Y=1 & \multicolumn{2}{c}{16.6 \%} \\
+TypeVillage & Indicator for village entity: & Y=1 & \multicolumn{2}{c}{23.09 \%} \\
+\hline
+\makecell[l]{Continuous\\variables} & & Minimum & Mean & Maximum \\
+CoverageIM & Log coverage amount of IM claim & 0.00 & 0.87 & 46.75 \\
+lnDeductIM & Log deductible amount of IM claim & 0.00 & 5.34 & 9.21 \\
+\hline\hline
+\end{tabular}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Benchmark models}
+For comparison, we introduce three benchmark models, which are special or limiting cases of the proposed dynamic random effects model:
+\begin{itemize}
+\item The naive GLMs: $p=q=1$, $r=k=\infty$, and $\eta=0$,
+\item Frequency-severity dependent GLMs (Garrido et al., 2016): $p=q=1$, $r=k=\infty$,
+\item Static random effects model (Jeong and Valdez, 2020): $p=q=1$, and
+\item Dynamic random effects model.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Benchmark models}
+For estimation of the parameters, we take a two-step approach so that
+\begin{itemize}
+\item the fixed effects parameters are estimated first due to the common mean structure via usual GLMs, and the dependence structure is considered later.
+In other words, we fit a usual Poisson/Gamma GLMs to estimate $\alpha$, $\beta$, and $\gamma$ first,
+\item and the remaining parameters for the dependence structures ($p$, $q$, $r$, $k$, and $\psi$) are estimated afterward.
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Regression Estimates of the Fixed Effects}
+\centering
+\scriptsize
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{Frequency} & \multicolumn{4}{c}{Severity} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-7}
+ & & & \multicolumn{2}{c}{Independent} & \multicolumn{2}{c}{Dependent} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & Estimate & p-value & Estimate & p-value & Estimate & p-value \\
+\midrule
+(Intercept) & -4.2571 & 0.0000 & 9.4271 & 0.0000 & 10.1312 & 0.0000 \\
+TypeCity & 0.9673 & 0.0000 & 1.0040 & 0.0339 & 1.3007 & 0.0012 \\
+TypeCounty & 1.8747 & 0.0000 & 1.3164 & 0.0060 & 1.3152 & 0.0009 \\
+TypeMisc & -2.7453 & 0.0068 & -1.3007 & 0.6018 & -1.2977 & 0.5252 \\
+TypeSchool & -0.9174 & 0.0008 & -0.2046 & 0.7617 & -0.1191 & 0.8300 \\
+TypeTown & -0.4129 & 0.1254 & 0.2571 & 0.6981 & 0.3588 & 0.5089 \\
+CoverageIM & 0.0687 & 0.0000 & 0.0008 & 0.9712 & 0.0332 & 0.0746 \\
+lnDeductIM & 0.1363 & 0.0030 & -0.1336 & 0.4481 & -0.1744 & 0.2278 \\
+Count & & & & & -0.4538 & 0.0000 \\
+\hline\hline
+\end{tabular}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Parameter Estimation for the Dependence Structure}
+\begin{itemize}
+\item Static random effects model: $\hat{r}=0.6143$, $\hat{k}=1.2615$, and $\hat{\psi}=1.5145$.
+\item Dynamic random effects model: $\hat{p}=0.8202$, $\hat{q}=0.7615$, $\hat{r}=0.9228$, $\hat{k}=1.8761$, and $\hat{\psi}=1.4671$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Parameter Estimation for the Dependence Structure}
+\begin{itemize}
+\item Recall that
+\begin{align*}
+\theta^N_1 &\sim \mathcal{G}\left(r,r\right), & \E{\theta^N_1} &= 1,\ \Var{\theta^N_1} = \frac{1}{r}, \\
+\theta^C_1 &\sim \mathcal{IG}\left(k+1,k\right), & \E{\theta^C_1} &= 1,\ \Var{\theta^C_1} = \frac{1}{k-1}.
+\end{align*}
+Since $r > k-1$ with the estimates from both static and dynamic models, it implies that the
+\textcolor{purple}{variability of $\theta^C_1$}, the (a priori) \textcolor{purple}{unobserved heterogeneity for the severity} part,
+is greater than that of $\theta^N_1$, the (a priori) unobserved heterogeneity for the \textcolor{purple}{frequency} part.
+\item Secondly, $p$ is estimated to be greater than $q$ in the dynamic model, which implies the
+\textcolor{purple}{decaying impact} according to the ages of claims in the determination of the credibility factors would be much
+\textcolor{purple}{stronger in the severity} part.
+\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Out-of-sample Validation}
+\centering
+\small
+\begin{tabular}{c|cccc}
+\hline\hline
+ & Naive & Garrido & Static & Dynamic \\
+\hline
+RMSE & 9272.96 & \textcolor{blue}{6433.21} & 6613.20 & 6608.58 \\
+MAE & 1345.41 & 1241.95 & 1190.02 & \textcolor{blue}{1166.10} \\
+Portfolio Mean & 979.94 & 905.95 & 884.05 & \textcolor{blue}{852.36} \\
+\hline\hline
+\multicolumn{5}{c}{* Note that the actual portfolio mean is 645.25.}
+\end{tabular}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Implication of Static vs. Dynamic Random Effects}
+Let us consider a hypothetical scenario where
+\begin{itemize}
+\item $\nu_t = 0.2$ and $\mu_t = 15000$ for $t=1,\ldots,5$, and
+\item $r=1$, $k=2$, $\gamma=0$, and $\psi=1.5$.
+\end{itemize}
+Suppose that there was \textcolor{purple}{exactly one claim} by a policyholder in one of the years 1 through 4
+(i.e., $\sum_{t=1}^4 n_t = 1$). As shown in the following table, we observe decaying effects of past claims in the
+calculation of credibility factors under the proposed dynamic model, whereas the static random effects model disregards such information.
+\end{frame}
+
+\begin{frame}{Implication of Static vs. Dynamic Random Effects}
+\centering
+\small
+\begin{tabular}{ccccc}
+\toprule
+ & \multicolumn{2}{c}{Dynamic ($p=q=0.8$)} & \multicolumn{2}{c}{Static ($p=q=1$)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Claim year & Frequency & Severity & Frequency & Severity \\
+\midrule
+1 & 0.9216 & 1.0309 & 1.1111 & 1.0309 \\
+2 & 1.0496 & 1.0347 & 1.1111 & 1.0309 \\
+3 & 1.2096 & 1.0385 & 1.1111 & 1.0309 \\
+4 & 1.4096 & 1.0421 & 1.1111 & 1.0309 \\
+\hline\hline
+\end{tabular}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Concluding Remarks}
+\begin{itemize}
+\item Throughout the presentation, we explored ratemaking frameworks that consider \textcolor{purple}{longitudinality} as well as
+\textcolor{purple}{dependence between frequency and severity} components.
+\item In both cases (where the random effects are either static or dynamic), we could obtain
+\textcolor{purple}{more general formula for credibility premium of the compound sum} with dependence between the frequency and severity.
+\item Use of time-varying random effects processes enables us to account for \textcolor{purple}{the seniority of claims}
+in the prediction formulas and lead to many nice features.
+\end{itemize}
+\end{frame}
+
+\end{document}
