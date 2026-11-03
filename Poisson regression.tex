@@ -1,0 +1,543 @@
+\documentclass{beamer}
+\mode<presentation> {\usetheme{default}}
+%\setbeamersize{text margin left=10mm,text margin right=10mm} 
+
+\setbeamertemplate{footline}[frame number]
+
+
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{bm}
+\usepackage{needspace}
+\usepackage{comment}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{bbm, dsfont}
+
+\usetikzlibrary{arrows,shapes,calc,positioning}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+%
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{remk}{Definition}[section]
+\newtheorem{exam}{Example}[section]
+\newtheorem{prob}{Exercise}[section]
+\newtheorem{solu2}{Solution}[section]
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+
+\newcommand{\dif}{\operatorname{d}}
+\newcommand{\var}{\operatorname{Var}}
+
+%opening
+\title{Poisson Regression}
+\author{Himchan Jeong, FSA}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Poisson Regression}
+
+\subsection{Introduction}
+
+
+\begin{frame}{Acknowledgement}
+
+Note that most of the contents in this section are directly quoted and/or slightly modified from 
+\url{https://openacttexts.github.io/Loss-Data-Analytics/ChapRiskClass.html\#S:RC:Introduction}.
+
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Motivational example}
+
+The Poisson regression model has been successfully used in a wide range of applications and has an advantage of allowing `closed-form expressions' for important quantities. 
+
+\vspace{4pt}
+
+In this section you will:  
+\begin{itemize}
+\item Understand Poisson regression as a convenient tool for combining individual Poisson distributions.
+\item Sharpen your understanding of the concept of exposure and its importance.  
+\item Formally learn how to formulate a Poisson regression model using indicator variables when the explanatory variables are categorical.
+\end{itemize}
+
+\framebreak
+
+To introduce Poisson regression, let us consider a hypothetical health insurance portfolio where all policyholders are of the same age and only one risk factor, smoking status, is relevant. Here `Count' means the number of outpatient visits.
+$$
+{\small
+\begin{matrix}
+\begin{array}{cc|cc|cc}
+\hline
+\text{Smoker} & \text{(level 1)}  & \text{Non-smoker}&\text{(level 2)}  & & \text{Both}\\
+  \text{Count} & \text{Observed} &  \text{Count} & \text{Observed}  &   \text{Count} & \text{Observed} \\ \hline
+0 & 2213 &   0 & 6671 &  0 & 8884 \\
+1 & 178  &   1 & 430  &  1 & 608 \\
+2 & 11   &   2 & 25   &  2 & 36 \\
+3 & 6    &   3 & 9    &  3 & 15 \\
+4 & 0    &   4 & 4    &  4 & 4 \\
+5 & 1    &   5 & 2    &  5 & 3 \\ \hline
+\text{Total} & 2409  &   \text{Total} & 7141 & \text{Total} & 9550 \\
+\text{Mean} & 0.0926 &   \text{Mean} & 0.0746 & \text{Mean} & 0.0792 \\
+\hline
+    \end{array}
+\end{matrix}
+}
+$$
+
+\framebreak
+
+\begin{itemize}
+\item We know that the probability mass function of the Poisson with mean $\mu$ is given by
+\begin{equation} \label{eq:Pois-pmf-1}
+\Pr(y=k)=\frac{\mu^k e^{-\mu}}{k!},\qquad k=0,1,2, \ldots
+\end{equation}
+and $E{[y]}=Var{(y)}=\mu$. 
+\item If we denote the Poisson mean parameter for each level by $\mu_{(1)}$ (smoker) and $\mu_{(2)}$ (non-smoker), we see from the table that $\hat{\mu}_{(1)}=0.0926$ and $\hat{\mu}_{(2)}=0.0746$, which shows the basic idea of risk classification. 
+\item Here the ratio of expected loss frequencies is $\hat{\mu}_{(1)}/\hat{\mu}_{(2)}=1.2402$, implying that smokers tend to visit a doctor's office 24.02$\%$ times more frequently compared to non-smokers.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+\item If the insurer charges the same premium to all policyholders regardless of smoking status, based on the average characteristic of the portfolio, the expected frequency (or premium) $\hat{\mu}$ is 0.0792, which can be verified as follows:
+$$
+\hat{\mu} = \left(\frac{n_1}{n_1+n_2}\right)\hat{\mu}_{(1)}+\left(\frac{n_2}{n_1+n_2}\right)\hat{\mu}_{(2)}=0.0792,
+$$
+where $n_i$ is the number of observations in each level. 
+\item Clearly, this premium is a weighted average of the premiums for each level with the weight equal to the proportion of insureds in that level.  
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{A simple Poisson regression}
+
+In the example above, we have fitted a Poisson distribution for each level separately, but we can actually combine them together via a Poisson regression model. One can use $\mu=\beta_0+\beta_1 x_1$, or, more commonly, a log linear form
+$$
+\log \mu=\beta_0+\beta_1 x_1,
+$$
+where $x_1$ is an indicator variable with
+$$
+x_1=
+\begin{cases}
+     1 & \text{if smoker}, \\
+     0 & \text{otherwise}.
+\end{cases}
+$$
+
+We generally prefer the  log linear relation to prevent producing negative $\mu$ values, which can happen when there are many different risk factors and levels.
+
+\framebreak
+
+Such setup results in different Poisson frequency parameters depending on the level in the risk factor as follows:
+\begin{equation} \label{eq:ind-mu}
+\mu= \begin{cases}
+     e^{\beta_0+\beta_1} & \text{if smoker (level 1)}, \\
+     e^{\beta_0} & \text{if non-smoker (level 2)} .
+\end{cases} 
+\end{equation}
+
+\framebreak
+
+
+\begin{itemize}
+\item With this Poisson regression model we can readily understand how the coefficients $\beta_0$ and $\beta_1$ are linked to the expected loss frequency in each level. 
+\item According to \eqref{eq:ind-mu}, the Poisson mean of the smokers, $\mu_{(1)}$, is given by
+$$
+\mu_{(1)}=e^{\beta_0+\beta_1}=\mu_{(2)} \,e^{\beta_1} \quad \text{or}\quad  \mu_{(1)}/\mu_{(2)} =e^{\beta_1}
+$$
+where $\mu_{(2)}$ is the Poisson mean for the non-smokers. 
+\item That is, the proportional increase in the expected loss frequency of the smokers compared to that of the non-smokers is simply given by a multiplicative factor $e^{\beta_1}$ (which is often called `relativity').
+
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Dealing with multi-level case}
+
+\begin{itemize}
+\item We can readily extend the two-level case to a multi-level one where $l$ different levels are involved for a single rating factor. 
+\item For this we generally need $l-1$ indicator variables to formulate
+\begin{equation} \label{eq:log-lin-mu-1}
+\log \mu=\beta_0+\beta_1 x_1+\cdots+\beta_{l-1} x_{l-1},
+\end{equation}
+where $x_k$ is an indicator variable that equals 1 if the policy belongs to level $k$ and 0 otherwise, for $k=1,2, \ldots, l-1$. 
+\item By omitting the indicator variable associated with the last level in \eqref{eq:log-lin-mu-1} we effectively chose level $l$ as the `base case', or reference level, but this choice is arbitrary and does not matter numerically. 
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+\item The resulting Poisson parameter for policies in level $k$ then becomes, from \eqref{eq:log-lin-mu-1},
+$$
+\mu= 
+\begin{cases}
+     e^{\beta_0+\beta_k} & \text{if the policy belongs to level } k, (k=1,2, ..., l-1), \\
+     e^{\beta_0} & \text{if the policy belongs to level } l.
+\end{cases}
+$$
+\item This indicates that, just like the two-level case, the expected loss frequency of the $k$th level is obtained from the base value multiplied by the relative factor $e^{\beta_k}$. 
+\item This relative interpretation becomes more powerful when there are many risk factors with multi-levels, and leads us to a better understanding  of the underlying risk and a more accurate prediction of future losses.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{General description of Poisson regression with unit exposure}
+
+We now describe Poisson regression in a formal and more general setting. Let us assume that there are $n$ independent policyholders with a set of rating factors characterized by a $p$-variate vector.
+\begin{itemize}
+\item The $i$th policyholder's rating factor is thus denoted by vector $\mathbf{ x}_i=(1, x_{i1}, \ldots, x_{ip})'$, and the policyholder has recorded the loss count $y_i \in \{0,1,2, \ldots \}$ from the last period of loss observation, for $i=1, \ldots, n$. 
+\item In the regression literature, the values $x_{i1}, \ldots, x_{ip}$ are generally known as \emph{explanatory variables}, as these are measurements providing information about the variable of interest $y_i$. 
+\item In essence, regression analysis is a method to quantify the relationship between a variable of interest and explanatory variables.
+\end{itemize}
+
+
+\framebreak
+\begin{itemize}
+\item We also assume, for now, that all policyholders have the same one unit period for loss observation, or equal exposure of 1, to keep things simple; we will discuss more details regarding the exposure in the following subsection. 
+\item We describe Poisson regression through its mean function. For this we first denote $\mu_i$ as the expected loss count of the $i$th policyholder under the Poisson specification:
+\begin{equation} \label{eq:mui-glm}
+\mu_i=E[{y_i|\mathbf{ x}_i}], \quad y_i \sim \mathcal{P}(\mu_i), \ i=1, \ldots, n.
+\end{equation}
+The condition inside the expectation in equation \eqref{eq:mui-glm} indicates that the loss frequency $\mu_i$ is the model expected response to the given set of risk factors or explanatory variables. 
+\item In principle the conditional mean $E[{y_i|\mathbf{ x}_i}]$ in \eqref{eq:mui-glm} can take different forms depending on how we specify the relationship between $\mathbf{ x}$ and $y$. The standard choice for Poisson regression is to adopt the exponential function, as we mentioned previously, so that
+\begin{equation} \label{eq:mean-ft-Pois}
+\mu_i=E[{y_i|\mathbf{ x}_i}]=e^{\mathbf{ x}'_i\boldsymbol \beta}, \quad y_i \sim \mathcal{P}(\mu_i), \ i=1, \ldots, n.
+\end{equation}
+Here $\boldsymbol \beta=(\beta_0, \ldots, \beta_p)^{\prime}$ is the vector of coefficients so that $\mathbf{ x}'_i \boldsymbol \beta=\beta_0+\beta_1x_{i1} +\ldots+\beta_p x_{ip}$.
+\item The exponential function in \eqref{eq:mean-ft-Pois} ensures that $\mu_i >0$ for any set of rating factors $\mathbf{ x}_i$.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize} 
+\item Often \eqref{eq:mean-ft-Pois} is rewritten as a log linear form
+\begin{equation} \label{eq:mean-ft-Pois-2}
+\log \mu_i=\log E{[y_i|\mathbf{ x}_i]}=\mathbf{ x}'_i \boldsymbol \beta, \quad y_i \sim \mathcal{P}(\mu_i), \ i=1, \ldots, n
+\end{equation}
+to reveal the relationship when the right side is set as the linear form, $\mathbf{ x}'_i \boldsymbol \beta$. Again, we see that the  mapping works well as both sides of \eqref{eq:mean-ft-Pois-2}, $\log \mu_i$ and $\mathbf{ x}'_i \boldsymbol \beta$, can now cover all real values. 
+
+\item When the exposures differ among the policyholders, however, as is the case in most practical cases, we need to revise this formulation by adding an exposure component as an additional term in \eqref{eq:mean-ft-Pois-2}.
+\end{itemize}
+
+
+\end{frame}
+
+\subsection{Incorporating Exposure}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Concept of Exposure}
+
+\begin{itemize}
+\item In order to determine the size of potential losses in any type of insurance, one must always know the corresponding exposure (the concept of exposure is an extremely important ingredient in insurance pricing, though we usually take it for granted).
+\item For example, when we say the expected  claim frequency of a health insurance policy is 0.2, it does not mean much without the specification of the exposure such as, in this case, per month or per year. 
+\item In fact, all premiums and losses need the exposure precisely specified and must be quoted accordingly; otherwise all subsequent statistical analyses and predictions will be distorted.  
+\item In the previous section we assumed the same unit of exposure across all policyholders, but this is hardly realistic in practice. 
+\item In health insurance, for example, two different policyholders with different lengths of insurance coverage (e.g., 3 months and 12 months, respectively) could have recorded the same number of claim counts. 
+\item As the expected number of claim counts would be proportional to the length of coverage, we should not treat these two policyholders' loss experiences identically in the modeling process. This motivates the need of the concept of \emph{exposure} in Poisson regression.  
+
+\item To understand the exposure, we alternatively parametrize the Poisson \emph{pmf} in terms of the \emph{rate} parameter $\lambda$, based on the definition of the Poisson process:
+\begin{equation} \label{eq:Pois-pmf-2}
+\Pr(Y=k|t)=\frac{(\lambda t)^k e^{-\lambda t}}{k!},\qquad k=0,1,2, \ldots
+\end{equation}
+with $E[Y]=Var(Y)=\lambda t$. 
+\item Here $\lambda$ is known as the rate or intensity per unit period of the Poisson process and $t$ represents the length of time or \emph{exposure}, a known constant value. For given $\lambda$ the Poisson distribution \eqref{eq:Pois-pmf-2} produces a larger expected loss count  as the exposure $t$ gets larger. 
+\item Clearly, \eqref{eq:Pois-pmf-2} reduces to \eqref{eq:Pois-pmf-1} when $t=1$, which means that the mean and the rate become the same for an exposure of 1, the case we considered in the previous subsection.  
+\end{itemize}
+
+\framebreak
+
+ In principle, the exposure does not need to be measured in units of time and may represent different things depending the problem at hand. For example:  
+\begin{enumerate}
+\item In health insurance, the rate may be the occurrence of a specific disease per 1,000 people and the exposure is the number of people considered in the unit of 1,000. 
+\item In auto insurance, the rate may be the number of accidents per year of a driver and the exposure is the length of the observed period for the driver in the unit of year.  
+\item For `workers compensation' that covers lost wages resulting from an employee's work-related injury or illness, the rate may be the probability of injury in the course of employment per dollar and the exposure is the payroll amount in dollars. 
+\item In marketing, the rate may be  the number of customers who enter a store per hour and the exposure is the number of hours observed.  
+\item In civil engineering, the rate may be  the number of major cracks on the paved road per 10 kms and the exposure is the length of road considered in the unit of 10 kms.  
+\item In credit risk modelling, the rate may be the number of default events per 1000 firms and the exposure is the number of firms under consideration in the unit of 1,000.  
+\end{enumerate}
+
+\framebreak
+
+Actuaries may be able to use different `exposure bases' for a given insurable loss. 
+\begin{itemize}
+\item For example, in auto insurance, both the number of kilometers driven and the number of months covered by insurance can be used as exposure bases. 
+\item Here the former is more accurate and useful in modelling the losses from car accidents, but more difficult to measure and manage for insurers. 
+\item Thus, a good exposure base  may not be the theoretically  best one due to various practical constraints.
+\item As a rule, an exposure base must be easy to determine, accurately measurable, legally and socially acceptable, and free from potential manipulation by policyholders.  
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Incorporating exposure in Poisson regression}
+\begin{itemize}
+\item As exposures affect the Poisson mean, constructing Poisson regressions requires us to carefully separate the rate and exposure in the modelling process. 
+\item Focusing on the insurance context, let us denote the rate of the loss event of the $i$th policyholder by $\lambda_i$, the known exposure (the length of coverage) by  $m_i$ and the expected loss count under the given exposure by $\mu_i$. 
+\framebreak
+\item Then the Poisson regression formulation in \eqref{eq:mean-ft-Pois} and \eqref{eq:mean-ft-Pois-2} should be revised in light of \eqref{eq:Pois-pmf-2} as
+\begin{equation} \label{eq:mean-ft-Pois-6}
+\mu_i=E{[y_i|\mathbf{ x}_i]}=m_i \,\lambda_i=m_i \, e^{\mathbf{ x}'_i \boldsymbol \beta}, \quad y_i \sim \mathcal{P}(\mu_i), \ i=1, \ldots, n,
+\end{equation} 
+which gives
+\begin{equation} \label{eq:mean-ft-Pois-7}
+\log \mu_i=\log m_i+\mathbf{ x}'_i \boldsymbol \beta, \quad y_i \sim \mathcal{P}(\mu_i), \ i=1, \ldots, n.
+\end{equation}
+\item Adding $\log m_i$ in \eqref{eq:mean-ft-Pois-7} does not pose a problem in fitting as we can always specify this as an extra explanatory variable, as it is a known constant, and fix its coefficient to 1. In the literature the log of exposure, $\log m_i$, is commonly called the `offset'.
+\end{itemize}
+
+\end{frame}
+
+\subsection{Categorical Variables and Multiplicative Tariff}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Rating Factors and Tariff}
+\begin{itemize}
+\item In practice most rating factors in insurance are \emph{categorical variables}, meaning that they take one of the predetermined number of possible values. \item Examples of categorical variables include sex, type of cars, the driver's region of residence and occupation. 
+\item Continuous variables, such as age or auto mileage, can also be grouped by bands and treated as categorical variables. 
+\item Thus we can imagine that, with a small number of rating factors, there will be many policyholders falling into the same risk class,  charged with the same premium. 
+\end{itemize}
+For the remaining of this chapter we assume that all rating factors are categorical variables.  
+
+\framebreak
+
+To illustrate how categorical variables are used in the pricing process, we consider a hypothetical auto insurance with only two rating factors:  
+\begin{itemize}
+ \item Type of vehicle: Type A (personally owned, $j=1$) and B (owned by corporations, $j=2$).
+ \item Age band of the driver:  Young (age $<$ 25, $k=1$), middle (25 $\le$ age $<$ 60, $k=2$) and old age (age $\ge$ 60, $k=3$).
+\end{itemize}
+$$
+{\small
+\begin{matrix}
+\begin{array}{ccrr}
+ \hline
+\text{Rating} &\text{factors}  &   \text{Exposure} & \text{Claim count} \\
+\text{Type }(j) & \text{Age }(k) &  \text{in year} & \text{observed}\\
+\hline \hline
+1 & 1 &  89.1 & 9\\
+1 & 2   & 417.0& 16\\
+1 & 3  & 155.2 & 6  \\
+2  & 1  & 19.3 & 1 \\
+2  & 2  & 360.4 & 13 \\
+2   & 3  & 276.7 & 6 \\ \hline
+\end{array}
+\end{matrix}
+}
+$$
+
+\begin{itemize}
+\item Our goal is to compute six different premiums for each of these $2 \times 3=6$ different risk classes combinations.
+\item In non-life insurance, a table (or a set of tables) or list that contains each set of rating factors and the associated premium is referred to as a tariff. 
+\item Each unique combination of the rating factors in a tariff is called a tariff cell.
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Multiplicative Tariff Model}
+
+Here we introduce the `\textbf{multiplicative tariff model}', a popular pricing structure that can be naturally used within the Poisson regression framework based on the above table. 
+\begin{itemize}
+\item Recall that the loss count of a policyholder is described by a Poisson regression model with rate $\lambda$ and the exposure $m$, so that the expected loss count becomes $m\lambda$. 
+\item As $m$ is a known constant, we are essentially concerned with modelling $\lambda$, so that it responds to the change in rating factors. 
+\item Among other possible `functional forms', we commonly choose the multiplicative relation to model the Poisson rate $\lambda_{jk}$ for cell ($j,k$):
+\end{itemize}
+
+\begin{equation}
+\lambda_{jk}= f_0 \times f_{1j} \times f_{2k}, \quad j=1,2; \ k=1, 2,3.
+\label{eq:multiplicative-tarrif}
+\end{equation}
+
+\framebreak
+
+Here $\{ f_{1j}, j=1,2\}$ are the parameters associated with the two levels in the first rating factor, car type, and  $\{ f_{2k}, k=1,2,3\}$  associated with the three levels in the age band, the second rating factor. 
+\begin{itemize}
+\item For instance, the Poisson rate for a mid-aged policyholder with a Type B vehicle is given by $\lambda_{22}=f_0 \times f_{12} \times f_{22}$ (the first term $f_0$ is some base value to be discussed shortly).
+\item These six parameters are understood as numerical representations of the levels within each rating factor, and are to be estimated from the dataset.  
+\end{itemize}
+
+\framebreak
+
+The multiplicative form \eqref{eq:multiplicative-tarrif} is easy to understand and use, because it clearly shows how the expected loss count (per unit exposure) changes as each rating factor varies. 
+\begin{itemize}
+\item For example, if $f_{11}=1$ and $f_{12}=1.2$, then the expected loss count of a policyholder with a vehicle of type B would be 20$\%$ larger than type A, when the other factors are the same. 
+\item In non-life insurance, the parameters $f_{1j}$ and $f_{2k}$  are known as `relativities' as they determine how much expected loss should change relative to the base value $f_0$. 
+\item The idea of relativity is quite convenient in practice, as we can decide the premium for a policyholder by simply multiplying a series of corresponding relativities to the base value. 
+
+\framebreak
+
+\item Dropping an existing rating factor or adding a new one is also transparent with this multiplicative structure. 
+\item In addition, the insurer may adjust the overall premium for all policyholders by controlling the base value $f_0$ without changing individual relativities. \item However, by adopting the multiplicative form, we implicitly assume that there is no serious interaction among the risk factors.  
+\end{itemize}
+
+\framebreak
+
+When the multiplicative form is used we need to address an identification issue. That is, for any $c>0$, we can write 
+
+$$
+\lambda_{jk}= f_0 \times \frac{f_{1j}}{c} \times c\,f_{2k}. 
+$$
+\begin{itemize}
+\item By comparing with \eqref{eq:multiplicative-tarrif}, we see that the identical rate parameter $\lambda_{jk}$ can be obtained for very different individual relativities.
+\item  This over-parametrization, meaning that many different sets of parameters arrive at an identical model, obviously calls for some restriction on $f_{1j}$ and $f_{2k}$. 
+\item The standard practice is to make one relativity in each rating factor equal to one (this can be made arbitrarily in theory, but the standard practice is to make the relativity of most common class (base class) equal to one).
+
+
+\framebreak
+
+\item We will assume that type A vehicles and middle-aged drivers to  be the most common classes ({\color{red} why?}), that is, $f_{11} = 1$ and $f_{22} = 1$.  This way all other relativities are uniquely determined. 
+\item The tariff cell $(j,k)=(1,2)$ is then called the `base tariff cell', where the rate simply becomes $\lambda_{12}=f_0$, corresponding to the base value according to \eqref{eq:multiplicative-tarrif}. 
+\item Thus the base value $f_0$ is generally interpreted as the Poisson rate of the base tariff cell (which corresponds to the intercept in a Poisson GLM).  
+
+
+\framebreak
+
+\item Again, \eqref{eq:multiplicative-tarrif} is log-transformed and rewritten as
+\begin{equation}
+\log \lambda_{jk}= \log f_0 + \log f_{1j} + \log f_{2k},
+\label{eq:log-linear-tariff}
+\end{equation} 
+as it is easier to work with in estimating process, similar to \eqref{eq:mean-ft-Pois-2}. 
+\item This log linear form makes the log relativities of the base level in each rating factor equal to zero, i.e., $\log f_{11}=\log f_{22}=0$, and leads to the following alternative, more explicit expression for \eqref{eq:log-linear-tariff}:
+\begin{equation}
+\small{
+\log \lambda_{jk}=\begin{cases}
+\log f_0 + \quad 0 \quad + \log f_{21} \quad \,\,& \text{for a policy in cell }(1,1), \\
+\log f_0+ \quad 0 \quad +\quad 0& \text{for a policy in cell }(1,2), \\
+\log f_0+ \quad 0 \quad +\log f_{23}& \text{for a policy in cell }(1,3), \\
+\log f_0+\log f_{12}+  \log f_{21} & \text{for a policy in cell }(2,1), \\
+\log f_0+\log f_{12}+\quad 0 \quad \,\,& \text{for a policy in cell }(2,2), \\
+\log f_0+\log f_{12}+\log f_{23}& \text{for a policy in cell }(2,3). \\
+\end{cases}
+}
+\label{eq:log-rate-Poi-tariff-3}
+\end{equation}
+
+\framebreak 
+
+\item This clearly shows that the Poisson rate parameter $\lambda$ varies across different tariff cells, with the same log linear form used in a Poisson regression framework.
+\item In fact the reader may see that \eqref{eq:log-rate-Poi-tariff-3} is  an extended version of the early expression \eqref{eq:ind-mu} with multiple risk factors and that the log relativities now play the role of $\beta_i$ parameters. 
+\item Therefore all the relativities can be readily estimated via fitting a Poisson regression with a suitably chosen set of indicator variables.
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Poisson Regression for Multiplicative Tariff}
+
+We now explain how the relativities can be incorporated into Poisson regression. As seen early in this chapter we use indicator variables to deal with categorical variables. For our illustrative auto insurer, therefore, we define an indicator variable for the first rating factor as
+$$
+x_1=
+\begin{cases}
+      1 & \text{ for vehicle type B}, \\
+      0 & \text{ otherwise}.
+\end{cases}
+$$
+For the second rating factor, we employ two indicator variables for the age band, that is,
+$$
+x_2=
+\begin{cases}
+     1 & \text{for age band 1}, \\
+     0 & \text{otherwise}.
+\end{cases}
+$$
+and 
+$$
+x_3=
+\begin{cases}
+     1 & \text{for age band 3}, \\
+     0 & \text{otherwise}.
+\end{cases}
+$$
+
+\begin{itemize}
+\item The triple $(x_1, x_2, x_3)$ then can effectively and uniquely determine each risk class.
+\item By observing that the indicator variables associated with Type A and Age band 2 are omitted, we see that tariff cell $(j,k)=(1,2)$ plays the role of the base cell. 
+\item We emphasize that our choice of the three indicator variables above has been carefully made so that it is consistent with the choice of the base levels in the multiplicative tariff model in the previous subsection (i.e., $f_{11}=1$ and $f_{22}=1$).  
+\end{itemize}
+
+\framebreak
+
+With the proposed indicator variables we can rewrite the log rate \eqref{eq:log-linear-tariff} as
+\begin{equation}
+\log \lambda= \log f_0+ \log f_{12}  \times x_1 + \log f_{21} \times x_2 +\log f_{23} \times x_3,
+\label{eq:log-linear-tariff-3}
+\end{equation}
+
+which is identical to \eqref{eq:log-rate-Poi-tariff-3} when each triple value is actually applied. For example, we can verify that the base tariff cell $(j,k)=(1,2)$ corresponds to $(x_1, x_2,x_3)=(0, 0, 0)$, and in turn produces $\log \lambda=\log f_0$ or $\lambda= f_0$ in \eqref{eq:log-linear-tariff-3} as required. 
+
+
+\framebreak
+
+Under this specification, let us consider $n$ policyholders in the portfolio with the $i$th policyholder's risk characteristic given by  a vector of explanatory variables $\mathbf{ x}_i=(1, x_{i1}, x_{i2},x_{i3})'$, for $i=1, \ldots, n$. 
+\begin{itemize}
+\item We then recognize \eqref{eq:log-linear-tariff-3} as 
+$$
+\log \lambda_{i}= \beta_0+ \beta_1 \, x_{i1} + \beta_{2} \, x_{i2} +\beta_3  \, x_{i3}=\mathbf{ x}'_i \boldsymbol \beta, \qquad i=1, \ldots, n,
+$$
+where $\beta_0, \ldots, \beta_3$ can be mapped to the corresponding log relativities in \eqref{eq:log-linear-tariff-3}. 
+\framebreak 
+\item This is exactly the same setup as in \eqref{eq:mean-ft-Pois-7} except for the exposure component. Therefore, by incorporating the exposure in each risk class, a Poisson regression model for this multiplicative tariff model finally becomes 
+$$
+\begin{array}{ll}
+\log \mu_i &=\log \lambda_{i}+\log m_i= \log m_i+ \beta_0+ \beta_1 \, x_{i1} + \beta_{2} \, x_{i2} +\beta_3  \, x_{i3}\\
+&=\log m_i+\mathbf{ x}'_i \boldsymbol \beta, \text{ for } i=1, \ldots, n.
+\end{array}
+$$
+\item As a result, the relativities are given by
+\begin{equation}
+{f}_0=e^{\beta_0}, \quad {f}_{12}=e^{\beta_1}, \quad {f}_{21}=e^{\beta_2}, \quad \text{and}\quad {f}_{23}=e^{\beta_3},
+\label{eq:relativity-1}
+\end{equation}
+with $f_{11}=1$ and $f_{22}=1$ from the original construction. 
+\item For the actual dataset, $\beta_i$, $i=0,1, 2, 3$, is replaced with the MLE $\hat{\beta}_i$.  
+\end{itemize}
+
+
+\framebreak
+
+We now apply a Poisson regression model to the hypothetical auto insurer with two risk factors. 
+\begin{itemize}
+\item As done before, we have set $(j,k)=(1,2)$ as the base tariff cell, so that  $f_{11}=f_{22}=1$.
+\item  The result of the regression gives the coefficient estimates $(\hat{\beta}_0, \hat{\beta}_1,\hat{\beta}_2,\hat{\beta}_3)=(-3.1774,   -0.2578,    0.8354,  -0.2486)$, which in turn produces the corresponding estimated relativities
+$$
+{f}_0= 0.0417, \quad {f}_{12}= 0.7728, \quad {f}_{21}=  2.3057  \quad \text{and}\quad {f}_{23}=  0.7799,
+$$
+from the relation given in \eqref{eq:relativity-1}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Beyond Poisson regression}
+
+While Poisson regression is a powerful tool for risk classifications of the claim frequencies, it is still limited because
+\begin{itemize}
+\item It assumes equi-dispersion property (mostly the claim frequency datasets  show over-dipersion), and
+\item It cannot handle the zero-inflation in the observed claim frequencies (no claims 90\%, 1 claim 9\%, more than 1 claim 1\%).
+\end{itemize}
+In this regard, one can consider more flexible count regression models such as negative binomial (NB) regression (e.g., \texttt{glm.nb} in \texttt{R}) or ZIP/ZINB regressions (e.g., \texttt{zeroinfl} in \texttt{R}).
+
+\end{frame}
+
+
+\end{document}

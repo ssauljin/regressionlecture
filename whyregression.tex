@@ -1,0 +1,471 @@
+\documentclass[ignorenonframetext,]{beamer}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{bm}
+\usepackage{extarrows}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+\ifxetex
+\usepackage{mathspec}
+\else
+\usepackage{fontspec}
+\fi
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+\usetheme{madrid}
+\usecolortheme{orchid}
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\newif\ifbibliography
+\usepackage{natbib}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight0.8\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\definecolor{azure}{rgb}{0, 0.4, 0.8}
+\definecolor{crimson}{rgb}{0.8, 0.4, 0}
+\definecolor{gold}{rgb}{0.72, 0.53, 0.04}
+\definecolor{ciel}{rgb}{0.39, 0.58, 0.93}
+\definecolor{dgreen}{rgb}{0.01, 0.75, 0.24}
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+\usepackage{bbm}
+\usepackage{hhline}
+\newcommand{\E}[1]{{\mathbb E}\left[#1\right]}
+\newcommand{\Var}[1]{{\mathrm Var}\left(#1\right)}
+\usepackage{beamerthemesplit}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{kotex}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{caption}
+\usepackage{comment}
+\newcommand{\parallelsum}{\mathbin{\!/\mkern-5mu/\!}}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\captionsetup[table]{belowskip=0pt,aboveskip=0pt}
+\captionsetup[figure]{belowskip=0pt,aboveskip=0pt}
+\newtheorem{model}{Model}
+
+\title{Why do we need regression models for insurance?}
+
+\author[Himchan Jeong]{\large{Himchan Jeong, PhD, FSA}}
+
+%\institute{Simon Fraser University}
+
+\date{}
+
+\begin{document}
+\frame{\titlepage}
+
+
+
+
+\begin{frame}{Traditional Form of Insurance}
+
+       \begin{columns}
+          \column{0.5\linewidth}
+             \centering
+             \includegraphics[height=8cm, width=5cm]{shipwreck.jpg}
+           \column{0.5\linewidth}
+ \begin{itemize}
+ \item \onslide<2-> If a seafarer was forced to throw cargo overboard to save the ship from sinking, the loss would be reimbursed collectively by his colleagues.
+ \end{itemize}
+   \end{columns} 
+\end{frame}
+
+\begin{frame}{Modern Form of Insurance}
+
+       \begin{columns}
+          \column{0.5\linewidth}
+             \centering
+             \includegraphics[height=8cm, width=5cm]{riskpooling.png}
+           \column{0.5\linewidth}
+ \begin{itemize}
+ \item \onslide<2-> As modern society becomes much more complicated, risks need to be shared by larger pool of people, who do not necessarily know each other.
+ \item \onslide<3-> As the risk pools have become anonymous, it has been critical to {\color{purple} assess and estimate} the amount of contribution to the pool.
+ \end{itemize}
+ \end{columns} 
+\end{frame}
+
+\begin{frame}{Example: Lung Cancer Insurance}
+Suppose it is known that one out of 100 people is diagnosed with lung cancer every year. If 1000 people purchase lung cancer insurance that pays $\$10,000$ to whom is diagnosed with lung cancer, how much should the {\color{purple} annual premium per person} be?
+ \begin{itemize}
+ \item \onslide<2-> Expected total payment: $10,000 \times \frac{1,000}{100}=100,000$.
+ \item \onslide<3-> Expected total payment per person: $\frac{100,000}{1,000}=100$.
+ \end{itemize}
+ \onslide<4-> \color{purple} Are we all set?
+\end{frame}
+
+\begin{frame}{Two Major Issues with Insurance Premium}
+       \begin{columns}
+          \column{0.4\linewidth}
+ \begin{itemize}
+ \item \onslide<2-> Is the expected total payment correct?
+ \item \onslide<3-> Is it fair to charge the premium evenly?
+ \end{itemize}
+           \column{0.6\linewidth}
+             \centering
+ \onslide<4->    \includegraphics[height=6cm, width=7cm]{tobacco.jpg}
+ \end{columns} 
+
+\end{frame}
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+Suppose Company A has additional information that 
+\begin{itemize}
+	\item 1.5 out of 100 smokers, 
+	\item 0.5 out of 100 non-smokers,
+\end{itemize} 
+are diagnosed with lung cancer every year. Further, 500 smokers and 500 non-smokers purchase lung cancer insurance that pays $\$10,000$ to whom is diagnosed with lung cancer.
+ \begin{itemize}
+ \item \onslide<2-> Expected total payment: $10,000 \times \frac{1.5 \times 500+0.5 \times 500}{100}=100,000$,
+ \item \onslide<3-> Fair premium for a smoker: \onslide<4-> $10000 \times \frac{1.5}{100}=150$,
+ \item \onslide<5-> Fair premium for a non-smoker: $10000 \times \frac{0.5}{100}=50$.
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+If Company A can differentiate the premium for a smoker and non-smoker,
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline
+           & \# of Insured & Loss    & Premium & Difference \\ \hline
+Smoker     & 500           & 75,000  & 75,000  & 0          \\
+Non-smoker & 500           & 25,000  & 25,000  & 0          \\ \hline
+Total      & 1,000         & 100,000 & 100,000 & 0        \\ \hline\hline
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+If Company B cannot differentiate the premium for a smoker and non-smoker,
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline
+           & \# of Insured & Loss    & Premium & Difference \\ \hline
+Smoker     & 500           & 75,000  & 50,000  & -25,000          \\
+Non-smoker & 500           & 25,000  & 50,000  & +25,000          \\ \hline
+Total      & 1,000         & 100,000 & 100,000 & 0       \\  \hline\hline
+\end{tabular}
+\end{table}
+\onslide<2-> After a year...
+\begin{itemize}
+	 \item \onslide<3-> 50 non-smokers left Company B to avoid higher premium (100 $\rightarrow$ 50),
+ 	 \item \onslide<4-> 50 smokers joined Company B to enjoy lower premium (150 $\rightarrow$ 100).
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+
+Because of the change in the portfolio, Company B suffers $5,000$ of loss.
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline
+           & \# of Insured & Loss    & Premium & Difference \\ \hline
+Smoker     & 550           & 82,500  & 55,000  & -27,500          \\
+Non-smoker & 450           & 22,500  & 45,000  & +22,500          \\ \hline
+Total      & 1,000         & 105,000 & 100,000 & -5,000       \\  \hline\hline
+\end{tabular}
+\end{table}
+\onslide<2-> And Company B decides to adjust the premium from 100 to 105 per person, to make up for the loss.
+\end{frame}
+
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+
+After the adjustment in premium, the portfolio looks breakeven.
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline
+           & \# of Insured & Loss    & Premium & Difference \\ \hline
+Smoker     & 550           & 82,500  & 57,750  & -24,750          \\
+Non-smoker & 450           & 22,500  & 47,250  & +24,750          \\ \hline
+Total      & 1,000         & 105,000 & 105,000 & 0       \\  \hline\hline
+\end{tabular}
+\end{table}
+
+\onslide<2-> However, after another year...
+\begin{itemize}
+	 \item \onslide<3-> 50 non-smokers left Company B to avoid higher premium (105 $\rightarrow$ 50),
+ 	 \item \onslide<4-> 50 smokers joined Company B to enjoy lower premium (150 $\rightarrow$ 105).
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Example: Lung Cancer Insurance (Revisited)}
+
+Again, because of the change in the portfolio, Company B suffers $5,000$ of loss.
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline
+           & \# of Insured & Loss    & Premium & Difference \\ \hline
+Smoker     & 600           & 90,000  & 63,000  & -27,000          \\
+Non-smoker & 400           & 20,000  & 42,000  & +22,000          \\ \hline
+Total      & 1,000         & 110,000 & 105,000 & -5,000       \\  \hline\hline
+\end{tabular}
+\end{table}
+
+\onslide<2-> \color{red} Would Company B survive in the end...?
+\end{frame}
+
+
+\begin{frame}{}
+
+\begin{center}
+\Huge \textbf{Insurance Data Analytics}
+\end{center}
+
+\end{frame}
+
+\begin{frame}{Data Description}
+Suppose we have a dataset of 1,000 observations described as follows:
+$$
+\begin{aligned}
+\onslide<2->
+Y:& \quad \text{Loss amount} \\
+X_1:&\quad  \text{Gender} \ \ (1=\text{Male}, \ 0=\text{Female})\\
+X_2:& \quad \text{Age}
+\end{aligned}
+$$
+
+\onslide<3-> Our task is to predict the future loss amount given available information ({\color{blue} Gender} and {\color{blue} Age} in here).
+\end{frame}
+
+
+\begin{frame}{Remark: Machine Learning}
+Note that machine learning can be classified into
+
+\begin{itemize}
+\item Supervised learning: task of learning a function that {\color{blue} maps an input to an output} based on example input-output pairs
+\item  Unsupervised learning: type of algorithm that learns patterns from {\color{blue} untagged data}
+\end{itemize}
+In that sense, our task is one example of {\color{blue}`supervised learning'}.
+
+\end{frame}
+
+
+\begin{frame}{Supervised Learning}
+             \centering
+\includegraphics[height=9cm, width=12cm]{supervised.png}
+\end{frame}
+
+\begin{frame}{Unsupervised Learning}
+             \centering
+\includegraphics[height=9cm, width=12cm]{unsupervised.png}
+\end{frame}
+
+
+
+\begin{frame}{Model Selection}
+
+\begin{itemize}
+\item \onslide<1-> To predict the future loss, we need a model built upon observed data.
+\item \onslide<1-> No model can capture reality exactly.
+\item \onslide<1->Model is nothing but an approximation of reality with some assumptions.
+\item \onslide<1->Some models help us to understand the complex dynamics of reality and predict the future outcomes.
+\end{itemize}
+
+
+\begin{quotation}
+\onslide<2-> ``All models are wrong, but some models are useful.'' George Box
+\end{quotation}
+\end{frame}
+
+
+\begin{frame}{Model vs Reality}
+
+             \centering
+\includegraphics[height=8cm, width=7cm]{modelreality.jpg}
+\end{frame}
+
+\begin{frame}{Preliminary Data Analysis}
+
+\textbf{summary\color{blue}(Y)}
+
+\begin{table}[]
+\begin{tabular}{llllll}
+Min. & 1st Qu. & Median & Mean & 3rd Qu. & Max. \\
+2961 & 3337    & 3460   & 3454 & 3569    & 3901
+\end{tabular}
+\end{table}
+
+\onslide<2-> Based on this data, we may propose our first model:
+$$
+\onslide<3-> \color{blue} \text{Model 1} \color{black}: P = 3454 \text{ for everyone}.
+$$
+\onslide<4-> {\color{red} Are you happy with it?}
+
+
+\end{frame}
+
+
+\begin{frame}{Preliminary Data Analysis}
+
+ We might need a more refined model with risk classification.
+
+       \begin{columns}
+          \column{0.44\linewidth}
+             \centering
+   \onslide<2->    \includegraphics[height=5cm, width=8cm]{dimigo_scatter.pdf}
+           \column{0.56\linewidth}
+ 	 \onslide<3-> One can see that the loss amounts tend to decrease as a function of {\color{blue} Age}.
+ 	 \end{columns}
+
+\end{frame}
+
+
+\begin{frame}{Effect of Age: Linear}
+
+We may find the best line that captures linear effect of {\color{blue} Age} in relation to the loss amounts.
+
+\begin{columns}
+          \column{0.44\linewidth}
+  \onslide<2->  \centering  \includegraphics[height=5cm, width=8cm]{dimigo_linear.pdf}
+ 	  \column{0.56\linewidth}
+$$
+\onslide<3-> \color{blue} \text{Model 2} \color{black}: P = 3618.204 - 3.815 X_2
+$$
+\onslide<4-> {\color{red} Are you happy with it?}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Effect of Age: Higher-order}
+
+We may consider adding higher-order effect of {\color{blue} Age} in relation to the loss amounts.
+
+\begin{columns}
+          \column{0.44\linewidth}
+  \onslide<2->  \centering  \includegraphics[height=5cm, width=8cm]{dimigo_higher.pdf}
+ 	  \column{0.56\linewidth}
+$$
+\begin{aligned}
+\onslide<3-> & \color{blue}  \text{Model 3} \color{black}: \\
+& P = 4154.728 - 31.838 X_2 + 0.324 X_2^2
+\end{aligned}
+$$
+\onslide<4-> {\color{red} Looks better :)}
+
+\onslide<5-> What about {\color{blue} Gender}?
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{More Preliminary Data Analysis}
+
+We might plot the loss amounts for each gender with different colors.
+
+       \begin{columns}
+          \column{0.44\linewidth}
+             \centering
+   \onslide<2->    \includegraphics[height=5cm, width=8cm]{dimigo_gscatter.pdf}
+           \column{0.56\linewidth}
+ 	 \onslide<3-> One can see that the level of loss amounts are also distinguishable with  {\color{blue} Gender}.
+ 	 \end{columns}
+
+\end{frame}
+
+\begin{frame}{Putting This Together}
+\begin{columns}
+          \column{0.44\linewidth}
+  \onslide<1->  \centering  \includegraphics[height=5cm, width=8cm]{dimigo_final.pdf}
+ 	  \column{0.56\linewidth}
+$$
+\begin{aligned}
+\onslide<2-> & \color{blue}  \text{Model 4} \color{black}: \\
+& P = 3998.1628 - 30.3322 X_2 \\
+& \qquad + 0.3074 X_2^2 + 201.8723X_1
+\end{aligned}
+$$
+
+\end{columns}
+\end{frame}
+
+
+\begin{frame}{Validation}
+
+\begin{table}[]
+\begin{tabular}{l|rrrr}
+\hline\hline              & Model 1 & Model 2 & Model 3 & Model 4 \\ \hline
+Difference    & \onslide<2-> 0       & \onslide<3-> 0       & \onslide<4-> 0       & \onslide<4-> 0       \\
+Average Error & \onslide<5-> 161.01  & \onslide<6-> 151.02  & \onslide<7-> 138.35  & \onslide<8-> 97.94   \\ \hline\hline
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+	\item \onslide<9->   In terms of total loss prediction, all models are acceptable.
+	\item \onslide<10-> By having a better risk classification model, however, one can predict the future loss amounts more accurately.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Flood of Data}
+
+\begin{columns}
+          \column{0.5\linewidth}
+    \centering  \includegraphics[height=5cm, width=5cm]{dataflood.jpg}
+ 	  \column{0.5\linewidth}
+\begin{itemize}
+	\item \onslide<2-> In this example, there were only two available inputs that can be used for risk classification, which allowed us to take (relatively simpler) step-wise approach.
+	\item \onslide<3-> Due to advances in technology, nowadays we have much more data available compared to past years.
+\end{itemize}
+\end{columns}
+
+\end{frame}
+
+
+\begin{frame}{Issues Beyond Data Analytics}
+\begin{itemize}
+	\item  Regulations
+		\begin{itemize}
+			\item \onslide<1-> Use of gender for ratemaking has been banned in EU
+		\end{itemize}
+	\item \onslide<2-> Causality
+				\begin{itemize}
+			\item \onslide<3-> Shark attacks \textit{vs} Icecream sales
+			\item \onslide<4-> Claims costs \textit{vs} Credit scores
+
+		\end{itemize}
+
+	\item \onslide<5-> Internal/external Communication
+\end{itemize}
+\end{frame}
+
+
+
+
+\end{document}

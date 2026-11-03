@@ -1,0 +1,415 @@
+\documentclass{beamer}
+\mode<presentation> {\usetheme{default}}
+%\setbeamersize{text margin left=10mm,text margin right=10mm} 
+
+\setbeamertemplate{footline}[frame number]
+
+
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{bm}
+\usepackage{needspace}
+\usepackage{comment}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{bbm, dsfont}
+
+\usetikzlibrary{arrows,shapes,calc,positioning}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+%
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{remk}{Definition}[section]
+\newtheorem{exam}{Example}[section]
+\newtheorem{prob}{Exercise}[section]
+\newtheorem{solu2}{Solution}[section]
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+
+\newcommand{\dif}{\operatorname{d}}
+\newcommand{\var}{\operatorname{Var}}
+
+%opening
+\title{Linear Mixed Models}
+\author{Himchan Jeong, FSA}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Linear Mixed Models}
+
+\subsection{Motivation}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Motivation}
+
+Recall the basic assumptions of the linear models where $y_1,\ldots,y_m$ are the observed response variable and $\mathbf{x}_1,\ldots, \mathbf{x}_m \in \mathbb{R}^{p \times 1}$ are the individual covariates  (here $Z \in \mathbb{R}^{a \times b}$ means that $Z$ is a $(a \times b)$ real-valued matrix):
+\begin{enumerate}
+	\item $E[y_i] = \mathbf{x}_i' \bm{\beta}$ for $\bm{\beta} = (\beta_1, \ldots, \beta_p) \in \mathbb{R}^{p\times 1}$,
+	\item $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are non-random,
+	\item $Var(y_i) = \sigma^2$,
+	\item $\{ y_1, y_2, \ldots, y_m  \}$ are independent,
+	\item $\{ y_1, y_2, \ldots, y_m  \}$ are normally distributed.
+\end{enumerate}
+Such situations can be written in short as follows:
+\begin{equation} \label{eq:linmod}
+y_i = \mathbf{x}_i' \bm{\beta}  + \epsilon_i, \quad \epsilon_i \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2).
+\end{equation}
+
+Note that the first components of $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are all 1 so that $\beta_1$ corresponds to the \emph{intercept} term in the linear models.
+\framebreak
+
+Now, let us assume an example of data with hierarchy so that we observe data points for each of the subjects $i \in \{1,\ldots, m\}$ for time $t=1,\ldots, n_i$. If we adopt the assumptions from the linear models, then we can write them as follows with the modified subscripts:
+
+\begin{enumerate}
+	\item $E[y_{i,t}] = \mathbf{x}_{i,t}' \bm{\beta}$ for $\beta \in \mathbb{R}^{p \times 1}$,
+	\item $ \{\mathbf{x}_{1,1}, \mathbf{x}_{1,2}, \ldots, \mathbf{x}_{m,n_m} \}$ are non-random,
+	\item $Var(y_{i,t}) = \sigma^2$,
+	\item {\color{red} $\{ y_{1,1}, y_{1,2}, \ldots, y_{m,n_m}  \}$ are independent,}
+	\item $\{  y_{1,1}, y_{1,2}, \ldots, y_{m,n_m}   \}$ are normally distributed.
+\end{enumerate}
+What if one of the above assumptions is not valid...? (Note that $\{ y_{i,1}, y_{i,2}, \ldots, y_{i,n_i}  \}$ are from the same subject $i$ over time)
+
+\framebreak
+In this regard, one can consider the following representation:
+\begin{equation} \label{eq:mixedmod_intercept}
+y_{i,t} = \mathbf{x}_{i,t}'\bm{\beta} + {\color{red}u_i}+ \epsilon_{i,t},
+\end{equation}
+where $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$  for $t=1,\ldots, n_i$ and $u_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_u)$ for $i=1,\ldots, m$.
+
+\vspace{8pt}
+\eqref{eq:mixedmod_intercept} is one of the most widely used example of the \textbf{linear mixed models}. In this case, $y_{i,t}$ and $y_{i,t'}$ are NOT independent!
+
+
+\framebreak
+
+Let us consider two special cases of \eqref{eq:mixedmod_intercept} here:
+\begin{itemize}
+	\item Complete pooling (when $\phi_u \rightarrow 0$): If so, $u_i \equiv 0$ so that it is reduced to \eqref{eq:linmod}.
+	\item No pooling (when $\phi_u \rightarrow \infty$): If so, we can analyze the data only if for the data points from the same subject $i$.
+\end{itemize}
+
+Therefore, by allowing $\phi$ to be a positive constant, we can do multi-level modeling somewhere between the above two extreme cases; complete pooling (ignore group effects) and no pooling (all the groups are treated as different datasets).
+
+\end{frame}
+
+
+\begin{frame}{Why Random Effects?}
+
+The following hypothetical example shows us that we might capture the
+\color{purple} unobserved heterogeneity in risk \color{black} by
+observing the residual after controlling for the effects of observed
+covariates, which can be explained in terms of \color{purple} random
+effects \color{black} for policyholders A and B.
+
+\begin{table}[h!t!]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{c|c|c|c|c|c|c|c}
+\multirow{2}{*}{Year} & \multirow{2}{*}{Gender} & \multirow{2}{*}{Age} & \multirow{2}{*}{Vehicle Size} & \multicolumn{2}{c|}{Policyholder A} & \multicolumn{2}{c}{Policyholder B} \\ \cline{5-8} 
+                      &                         &                      &                               & \# of Claim      & Amt of Claim     & \# of Claim      & Amt of Claim     \\ \hline
+2015                  & M                       & 45                   & Medium                        & 0                & 0                & 1                & 500              \\ 
+2016                  & M                       & 46                   & Medium                        & 0                & 0                & 2                & 4000             \\ 
+2017                  & M                       & 47                   & Large                         & 1                & 200              & 1                & 8000             \\ 
+\end{tabular}}
+\end{table}
+Note that random effects model has a good connection with  \color{purple} credibility theory  \color{black} as well.
+\end{frame}
+
+
+
+\subsection{Inference}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Model assumptions and notation}
+
+Now, we are ready to introduce a general form of the linear mixed models given as follows:
+
+\begin{equation} \label{eq:mixedmodgen}
+\begin{aligned}
+&\bm{y} = \bm{X\beta + Zu + \epsilon} \\
+&\bm{u} \sim \mathcal{N}(\bm{0, D}), \ \bm{\epsilon} \sim \mathcal{N}(\bm{0, \Sigma}), \ \bm{u} \perp \bm{\epsilon},
+\end{aligned}
+\end{equation}
+where $\bm{Z}$ is a pre-determined model matrix, $\bm{D}$ is the covariance matrix of the random effects $\bm{u}$, and $\bm{\Sigma}$ is the covariance matrix of the white noise $\bm{\epsilon}$. 
+
+Note that the marginal/conditional mean and variance of $\mathbf{y}$ are given as follows:
+\begin{itemize}
+	\item $E[\bm{y}|\bm{u}] = \bm{X\beta + Zu}$, $Var(\bm{y}|\bm{u}) = \bm{\Sigma}$,
+	\item $E[\bm{y}] = \bm{X\beta}$, $Var(\bm{y}) = \bm{ZDZ' + \Sigma:= V}$ ({\color{red} why?}).
+\end{itemize}
+
+\framebreak
+
+\begin{exam}[Random intercepts]
+Recall the motivational example in \eqref{eq:mixedmod_intercept}. By letting $\bm{u}=(u_1, u_2, \ldots, u_m)'$, one can check that, it is a special case of \eqref{eq:mixedmodgen} where $\bm{\Sigma} = \sigma^2 \cdot \bm{I}_{N} \in \mathbb{R}^{N \times N}$ ($N = n_1 + \ldots+ n_m$), $\bm{D}= \phi_u \cdot \bm{I}_{{m}}\in \mathbb{R}^{{m} \times {m}}$, and
+$$
+\bm{Z}=\begin{bmatrix}
+\bm{1}_{n_1} & \bm{0}_{n_1} & \cdots & \bm{0}_{n_1} \\
+\bm{0}_{n_2} & \bm{1}_{n_2} &  &  \\
+\vdots &  & \ddots &  \\
+\bm{0}_{n_m} &  &  & \bm{1}_{n_m} \\
+\end{bmatrix}\in \mathbb{R}^{N \times m}.
+$$
+Here $\bm{1}_{k}$ (resp. $\bm{0}_{k}$) means a vector of length $k$ with all components being 1 (resp. 0).
+\end{exam}
+
+\framebreak
+
+
+More specifically, suppose we have
+$$
+y_{i,t} = \mathbf{x}_{i,t}'\bm{\beta} + {\color{red}u_i}+ \epsilon_{i,t},
+$$
+where $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$  for $t=1,2, 3$ and $u_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_u)$ for $i=1,2, 3$. In this case, we have $\bm{\Sigma} = \sigma^2 \cdot \bm{I}_{\bm{T}} = \sigma^2 \cdot \bm{I}_{9} \in \mathbb{R}^{9 \times 9}$, $\bm{D}= \phi_u \cdot \bm{I}_{{3}}\in \mathbb{R}^{{3} \times {3}}$, and
+$$
+\bm{Z}'=\begin{bmatrix}
+1 & 1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+\end{bmatrix}\in \mathbb{R}^{3 \times 9}.
+$$
+
+\framebreak
+
+\begin{exam}[Random slopes]
+Suppose there are three clusters ($m=3$) where each of the clusters have 1000 data points ($n_1=n_2=n_3=1000$) with a covariate ${x}_{i,t} \in \mathbb{R}^{1 \times 1}$  and the corresponding response variable $y_{i,t}$. 
+
+If we consider a situation where the {\color{red} impacts of the covariate are different among the clusters}, then it can be modeled as follows:
+$$
+y_{i,t} = \beta_1 + \beta_2 {x}_{i,t} + {\color{red}v_i {x}_{i,t}}+ \epsilon_{i,t}, \ i=1,2,3, \ t=1,\ldots, 1000,
+$$
+where $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$  and $v_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_v)$. In this case, we have $\bm{\Sigma} =  \sigma^2 \cdot \bm{I}_{3000} \in \mathbb{R}^{3000 \times 3000}$, 
+$\bm{D}= \phi_v \cdot \bm{I}_3 \in \mathbb{R}^{{3} \times {3}}$, and %(Let $\bm{u}=(v_1, v_2, v_3)'$ here.) 
+$$
+{\small
+\bm{Z}'=\begin{bmatrix}
+ {x}_{1,1} & \cdots &  {x}_{1,1000} & 0 & \cdots & 0 & 0 & \cdots & 0 \\
+0 & \cdots & 0 & {x}_{2,1} & \cdots &  {x}_{2,1000} & 0 & \cdots & 0 \\
+0 & \cdots & 0 & 0 & \cdots & 0 & {x}_{3,1} & \cdots &  {x}_{3,1000}\\
+\end{bmatrix}\in \mathbb{R}^{3 \times 3000}. }
+$$
+\end{exam}
+
+\pagebreak
+
+\begin{exam}[Random intercepts and slopes]
+Suppose there are three clusters ($m=3$) where each of the clusters have 1000 data points ($n_1=n_2=n_3=1000$) with a covariate ${x}_{i,t} \in \mathbb{R}^{1 \times 1}$  and the corresponding response variable $y_{i,t}$. 
+
+If we consider a situation where the {\color{red} impacts of the covariate are different among the clusters on top of the different intercepts}, then it can be modeled as follows:
+$$
+y_{i,t} = \beta_1 + \beta_2 {x}_{i,t} + {\color{red}u_i + v_i {x}_{i,t}}+ \epsilon_{i,t}, \ i=1,2,3, \ t=1,\ldots, 1000,
+$$
+where $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$  for $t=1,\ldots, 1000$, $u_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_u)$, $v_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_v)$ for $i=1,2,3$, and $u_i \perp v_i$.
+
+\vspace{8pt}
+What would be $\bm{\Sigma}$, $\bm{D}$, and $\bm{Z}$ in this case? (Let $\bm{u}=(u_1, u_2, u_3, v_1,v_2, v_3)'$ here.)
+
+\end{exam}
+
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Estimation and prediction}
+\begin{theorem}[Estimation of $\bm{\beta}$ with known $\bm{V}$]
+If $\bm{V = ZDZ' + \Sigma}$ is known and positive definite, and $X$ is of full rank, then the generalized least squares (GLS) estimator of $\bm{\beta}$ is given as follows:
+$$
+\hat{\bm{\beta}}^{GLS}=\bm{(X'V^{-1}X)^{-1} X'V^{-1}y}.
+$$
+\end{theorem}
+
+\begin{proof}
+See \url{https://www.statlect.com/fundamentals-of-statistics/generalized-least-squares}.
+\end{proof}
+
+\framebreak
+For simplicity, let us define $\bm{C = (X'V^{-1}X)^{-1} X'V^{-1}}$. Then it is easy to check that
+$$
+\hat{\bm{\beta}}^{GLS} = \bm{C X\beta}  + \bm{C Zu} +  \bm{C \epsilon} = \bm{\beta}  + \bm{C Zu} +  \bm{C \epsilon},
+$$
+so that $\mathbb{E}[\hat{\bm{\beta}}^{GLS}]=\bm{\beta} + \bm{C Z \mathbb{E}[u]} + \bm{C  \mathbb{E}[\epsilon]=\bm\beta} $ (unbiased), and
+$$
+\begin{aligned}
+\mathbb{V}ar[\hat{\bm{\beta}}^{GLS}] &= \bm{C Z \mathbb{V}ar[u] Z' C'} + \bm{C  \mathbb{V}ar[\epsilon] C'} \\
+ &=  \bm{C Z D Z' C'} + \bm{C  \Sigma C'}  = \bm{C  V C'}\\
+& = \bm{(X'V^{-1}X)^{-1} X'V^{-1} \cdot V  \cdot V^{-1} X(X'V^{-1}X)^{-1} }\\
+&=\bm{(X'V^{-1}X)^{-1}}.
+\end{aligned}
+$$
+
+What about $\hat{\bm{\beta}}^{OLS}=\bm{(X'X)^{-1}X'y}$?
+
+\framebreak
+
+\begin{theorem}[Prediction of $\bm{u}$ with known $\bm{V}$ and $\bm{\beta}$]
+The best linear predictor (BLP) of $\bm{u}$ is given as follows:
+$$
+\text{BLP}(\bm{u}):=\hat{\bm{u}}=\bm{D Z'V^{-1}(y-X\beta)}.
+$$
+\end{theorem}
+
+\begin{proof}
+See page 197 of the textbook (Chapter 8 of PMAS1).
+\end{proof}
+Usually, $\bm{\beta}$ is unknown so it is replaced with $\hat{\bm{\beta}}$ in practice in that case. Note also that $\hat{\bm{u}}$ is also an unbiased estimator of $\bm{u}$, namely, $E[\hat{\bm{u}}]=E[\bm{u}]=0$.
+
+\framebreak
+
+
+
+By further (innocuously) assuming that $\bm{u}_i$ are i.i.d. (see the notation of (8.22) in the textbook), one can write out the BLP of $\bm{u}_i$ as follows:
+$$
+\hat{\bm{u}}_i=G Z_i'V_i^{-1}(\bm{y}_i-X_i\hat{\bm{\beta}}),
+$$
+where the defintion of $G, \bm{u}_i, Z_i, V_i, \bm{y}_i, X_i$ can be found from (8.20)--(8.24) of the textbook.
+
+\vspace{8pt}
+
+Suppose that for the subject $i$, we observed a new covariate vector $\bm{x}_{i,n_i+1}$. In this case, the predicted value of $\bm{y}_{i,n_i+1}$ is given as
+
+$$
+\hat{\bm{y}}_{i,n_i+1}= \bm{x}'_{i,n_i+1}\hat{\bm{\beta}} + \bm{z}'_{i,n_i+1}\hat{\bm{u}}_i.
+$$
+
+\framebreak
+
+Let us consider the setting in \eqref{eq:mixedmod_intercept} where $\mathbf{x}_{i,t} = 1 \in \mathbb{R}^{1 \times 1}$ and $n_i=n$ so that
+$$
+y_{i,t} = \mu + {\color{red}u_i}+ \epsilon_{i,t},
+$$
+where $\epsilon_{i,t} \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2)$  for $t=1,\ldots, n$ and $u_i \overset{i.i.d.}\sim \mathcal{N}(0, \phi_u)$ for $i=1,\ldots, m$. In this case, it is easy to figure out that
+$$
+\begin{aligned}
+G &= \phi_u \in \mathbb{R}^{1 \times 1}, Z_i = \bm{1}_{n} \in \mathbb{R}^{n \times 1}, {\Sigma}_i = \sigma^2 \cdot I_n \in \mathbb{R}^{n \times n}, \\
+V_i &= Z_i G Z_i' + {\Sigma}_i = \phi_u \bm{1}_{n} \bm{1}_{n}' + \sigma^2 \cdot I_n \in \mathbb{R}^{n \times n} = \phi_u \cdot J_n + \sigma^2 \cdot I_n,
+\end{aligned}
+$$
+where $J_n \in \mathbb{R}^{n \times n}$ is a matrix with all components being 1.
+
+Question: How do we find $V_i^{-1}$ in this case?
+
+Answer: Via \href{https://en.wikipedia.org/wiki/Sherman-Morrison_formula}{ `Sherman–Morrison formula'}.
+$$
+V_i^{-1}= \sigma^{-2} \cdot I_n - \frac{\sigma^{-4}\phi_u J_n}{1 + \sigma^{-2}\phi_u  n},
+$$
+because $ \bm{1}_{n} ' \bm{1}_{n} =n$.
+
+\framebreak
+Since $ \bm{1}_{n} ' J_n =n \bm{1}_n'$, $\mathbf{x}_{i,t}\bm{\beta}=\mu$, and $\bm{1}'_n \bm{y}_i = \sum_{t=1}^n y_{i,t}= n \overline{y}_i$, we have
+$$
+\begin{aligned}
+\hat{\bm{y}}_{i,n_i+1} &= \bm{x}'_{i,n_i+1}\hat{\bm{\beta}} + \bm{z}'_{i,n_i+1}\hat{\bm{u}}_i =  \hat{\mu} + \hat{\bm{u}}_i \\
+								 &= \hat{\mu} + G Z_i'V_i^{-1}(\bm{y}_i-X_i\hat{\bm{\beta}}) \\
+								 &= \hat{\mu} + \phi_u  \bm{1}_{n} '\left( \sigma^{-2} \cdot I_n - \frac{\sigma^{-4}\phi_u J_n}{1 + \sigma^{-2}\phi_u  n} \right)(\bm{y}_i-\hat{\mu}\cdot \bm{1}_{n}) \\
+								&= \hat{\mu} + \sigma^{-2}\phi_u   \left(\bm{1}_n' - \frac{\sigma^{-2}\phi_u n \bm{1}_n'}{1 + \sigma^{-2}\phi_u  n} \right)(\bm{y}_i-\hat{\mu}\cdot \bm{1}_{n}) \\
+								&= \hat{\mu} + \sigma^{-2}\phi_u   \left(1 - \frac{\sigma^{-2}\phi_u n}{1 + \sigma^{-2}\phi_u  n} \right)(\bm{1}_n'\bm{y}_i-\hat{\mu}\cdot \bm{1}_n'\bm{1}_{n}) \\
+								&= \hat{\mu} + \frac{\sigma^{-2}\phi_u n}{1 + \sigma^{-2}\phi_u  n} (\overline{y}_i-\hat{\mu}) \\
+								&= \frac{\sigma^2/\phi_u}{\sigma^2/\phi_u+n}\hat{\mu} + \frac{n}{\sigma^2/\phi_u+n} \overline{y}_i = (1-Z) \hat{\mu} + Z \overline{y}_i.\\
+\end{aligned}
+$$
+Later, it turns out that such a result is closely related with the so-called `credibility premium'.
+
+\framebreak
+Recall two special cases of \eqref{eq:mixedmod_intercept} here:
+\begin{itemize}
+	\item Complete pooling (when $\phi_u \rightarrow 0$): If so, $Z=\frac{\phi_u n}{\sigma^2+\phi_u n} \rightarrow  0$ so that 
+$$
+\hat{\bm{y}}_{i,n_i+1} = \frac{\sigma^2/\phi_u}{\sigma^2/\phi_u+n}\hat{\mu} + \frac{n}{\sigma^2/\phi_u+n} \overline{y}_i \rightarrow \hat{\mu}.
+$$
+	\item No pooling (when $\phi_u \rightarrow \infty$): If so, $Z=\frac{n}{\sigma^2/\phi_u+ n} \rightarrow  1$ so that
+\end{itemize}
+$$
+\hat{\bm{y}}_{i,n_i+1} = \frac{\sigma^2/\phi_u}{\sigma^2/\phi_u+n}\hat{\mu} + \frac{n}{\sigma^2/\phi_u+n} \overline{y}_i \rightarrow  \overline{y}_i.
+$$
+
+Therefore, by allowing $\phi_u$ to be a positive constant, we can get a predicted value of $\hat{\bm{y}}_{i,n_i+1}$ in the spirit of credibility premium; which is a compromise of cluster experience, $\overline{y}_i$, and the (estimate of) manual premium, $\hat{\mu}$.
+
+\framebreak
+
+\begin{itemize}
+	\item In practice, the covariance matrix $\bm{V(\theta)=ZD(\theta)Z' + \Sigma(\theta)}$ is often unknown so they need to be estimated from the data using the likelihood $L(\bm{\beta, \theta})$ as in (8.37) ($\bm{\theta}$ is the covariance parameters).
+	\item If $\bm{\theta}$ is fixed, then the maximizer of (8.37) with respect to $\bm{\beta}$ is given as follows:
+$$
+\bm{\hat{\beta}(\theta) = (X'V(\theta)^{-1}X)^{-1} X'V(\theta)^{-1}y}.
+$$
+That being said, if one can obtain a reasonable estimate of $\bm{\theta}$, then the joint estimation of $\bm{\beta, \theta}$ is done.
+\end{itemize}
+
+\framebreak
+\begin{itemize}
+	\item Restricted maximum likelihood (REML) is a popular way to estimate $\bm{\theta}$ for the LMMs, where we use the following marginal log-likelihood of $\bm{\theta}$ by integrating out the fixed effects in $\bm{\beta}$:
+$$
+\begin{aligned}
+\ell_r(\bm{\theta})&= \ln  \left( \int L(\bm{\beta, \theta})d \bm{\beta} \right) \\
+					&= \ell_p(\bm{\theta}) - \frac{1}{2} \ln |\bm{X'V(\theta)^{-1}X}| + \text{constants},
+\end{aligned}
+$$
+where $\ell_p(\bm{\theta})$ is defined in (8.39) of the textbook.
+\item In \texttt{R}, one can choose whether to use REML approach (minimizing $\ell_r(\bm{\theta})$) or ML approach (minimizing $\ell_p(\bm{\theta})$) with the \texttt{lmer} function by specifying \texttt{REML=TRUE} (by default) or \texttt{REML=FALSE} (recall $\bm{y}'M_X \bm{y} / n$ vs. $\bm{y}'M_X \bm{y} / (n-p)$ in the linear models).
+\end{itemize}
+
+
+\end{frame}
+
+
+%\begin{theorem}[Prediction of $\bm{y}$ with known $\bm{V}$ and updated $\bm{X}_{i,*}$]
+%Suppose that for the subject $i$, we observed a new covariate vector $\bm{X}_{i,*}$. In this case, the predicted value of $\bm{y}_{i,*}$ is given as follows:
+%$$
+%\begin{aligned}
+%\hat{\bm{y}}_{i,*}:&= \bm{X}_{i,*}\hat{\bm{\beta}} + \bm{Z}_i\hat{\bm{u}}_i \\
+%			  &=  \bm{X}_{i,*}\hat{\bm{\beta}} + \bm{Z}_i\bm{G Z_i'V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}})} \\
+%			  &=  \bm{X}_{i,*}\hat{\bm{\beta}} + (\bm{Z_iG Z_i'+\Sigma_i})\bm{V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}})} - \bm{\Sigma_i}\bm{V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}} )}\\
+%&= \bm{(\Sigma_i V_i^{-1}) \cdot X_{i,*}\hat{\bm{\beta}}} + (\bm{I_{T_i} - \Sigma_i V_i^{-1}}) \cdot \bm{y}_i
+%\end{aligned}
+%$$
+%\end{theorem}
+
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Applications}
+
+\begin{exam}[Workers’ Compensation Insurance Losses]
+We want to predict the worker's compensation insurance losses as a function of year and risk-class where the payroll is given as an offset. Let us consider the following linear models first (no random effects):
+\begin{itemize}
+	\item Complete pooling: clustering of data in risk classes are not considered at all
+$$
+\log (\texttt{Loss}_{ij}) = \log (\texttt{Payroll}_{ij}) +\beta_1 + \beta_2 \texttt{Year}_{ij}+ \epsilon_{ij}.
+$$
+	\item No pooling: clustering of data in risk classes are considered as fixed effects
+$$
+\log (\texttt{Loss}_{ij}) = \log (\texttt{Payroll}_{ij}) +\beta_{1, {\color{red}i}} + \beta_2 \texttt{Year}_{ij}+ \epsilon_{ij}.
+$$
+\end{itemize}
+
+\end{exam}
+
+\framebreak
+
+One can consider the following linear mixed models as well:
+\begin{itemize}
+	\item LMM with random intercepts: 
+$$
+\log (\texttt{Loss}_{ij}) = \log (\texttt{Payroll}_{ij}) +\beta_1 + {\color{red}u_i}+ \beta_2 \texttt{Year}_{ij}+ \epsilon_{ij}.
+$$
+	\item LMM with random intercepts and slopes: 
+$$
+\log (\texttt{Loss}_{ij}) = \log (\texttt{Payroll}_{ij}) +\beta_1 + {\color{red}u_i}+ \beta_2 \texttt{Year}_{ij}+{\color{red}v_i} \texttt{Year}_{ij}+ \epsilon_{ij}.
+$$
+\end{itemize}
+
+\end{frame}
+
+
+\end{document}

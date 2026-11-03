@@ -1,0 +1,428 @@
+\documentclass[ignorenonframetext,]{beamer}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{bm}
+\usepackage{extarrows}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+\ifxetex
+\usepackage{mathspec}
+\else
+\usepackage{fontspec}
+\fi
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+\usetheme{madrid}
+\usecolortheme{orchid}
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\newif\ifbibliography
+\usepackage{natbib}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight0.8\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\definecolor{azure}{rgb}{0, 0.4, 0.8}
+\definecolor{crimson}{rgb}{0.8, 0.4, 0}
+\definecolor{gold}{rgb}{0.72, 0.53, 0.04}
+\definecolor{ciel}{rgb}{0.39, 0.58, 0.93}
+\definecolor{dgreen}{rgb}{0.01, 0.75, 0.24}
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+\usepackage{bbm}
+\usepackage{hhline}
+\newcommand{\E}[1]{{\mathbb E}\left[#1\right]}
+\newcommand{\Var}[1]{{\mathrm Var}\left(#1\right)}
+\usepackage{beamerthemesplit}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{kotex}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{caption}
+\usepackage{comment}
+\newcommand{\parallelsum}{\mathbin{\!/\mkern-5mu/\!}}
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+\captionsetup[table]{belowskip=0pt,aboveskip=0pt}
+\captionsetup[figure]{belowskip=0pt,aboveskip=0pt}
+\newtheorem{model}{Model}
+
+\title{Multiple Linear Regression}
+
+\author[Himchan Jeong]{\large{Himchan Jeong, PhD, FSA}}
+
+%\institute{Simon Fraser University}
+
+\date{ }
+
+\begin{document}
+\frame{\titlepage}
+
+
+
+\begin{frame}{Motivation}
+
+Recall the basic assumptions of the linear models where $y_1,\ldots,y_m$ are the observed response variable and $\mathbf{x}_1,\ldots, \mathbf{x}_m \in \mathbb{R}^{p \times 1}$ are the individual covariates  (here $Z \in \mathbb{R}^{a \times b}$ means that $Z$ is a $(a \times b)$ real-valued matrix):
+\begin{enumerate}
+	\item $E[y_i] = \mathbf{x}_i' \bm{\beta}$ for $\bm{\beta} = (\beta_1, \ldots, \beta_p) \in \mathbb{R}^{p\times 1}$,
+	\item $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are non-random,
+	\item $Var(y_i) = \sigma^2$,
+	\item $\{ y_1, y_2, \ldots, y_m  \}$ are independent,
+	\item $\{ y_1, y_2, \ldots, y_m \}$ are normally distributed.
+\end{enumerate}
+Such situations can be written in short as follows:
+\begin{equation} \label{eq:linmod}
+y_i = \mathbf{x}_i' \bm{\beta}  + \epsilon_i, \quad \epsilon_i \overset{i.i.d.}\sim \mathcal{N}(0, \sigma^2).
+\end{equation}
+
+Note that the first components of $ \{\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m \}$ are all 1 so that $\beta_1$ corresponds to the \emph{intercept} term in the linear models.
+
+\end{frame}
+
+\begin{frame}{Model assumptions and notation}
+
+Here is a general form of the linear models with matrix notation:
+
+\begin{equation} \label{eq:linmodgen}
+\begin{aligned}
+&\bm{y} = \bm{X\beta + \epsilon}, \ \bm{\epsilon} \sim \mathcal{N}(\bm{0, \Sigma}=\sigma^2 I_m),
+\end{aligned}
+\end{equation}
+where $\bm{X} = \begin{pmatrix} \mathbf{x}'_1 \\ \mathbf{x}'_2 \\ \vdots \\ \mathbf{x}_m' \end{pmatrix}\in \mathbb{R}^{m \times p}$ is the covariate matrix for $m$ observations, $\bm{\Sigma} \in \mathbb{R}^{m \times m}$ is the covariance matrix of the white noise $\bm{\epsilon} \in \mathbb{R}^{m \times 1}$. 
+
+The marginal mean and variance of $\mathbf{y} = (y_1, y_2, \ldots, y_m) \in \mathbb{R}^{m \times 1}$ are given as follows:
+\begin{itemize}
+	\item $E[\bm{y}] = \bm{X\beta} \in \mathbb{R}^{m \times 1} $, $Var(\bm{y}) = \sigma^2 I_m \in \mathbb{R}^{m \times m}$.
+\end{itemize}
+
+
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Point Estimation}
+\begin{theorem}[Estimation of $\bm{\beta}$ - OLS]
+If $X  \in \mathbb{R}^{m \times p}$ is of full rank, then the ordinary least squares (OLS) estimator of $\bm{\beta}$ is given as follows:
+$$
+\hat{\bm{\beta}}^{OLS}=\bm{(X'X)^{-1} X'y}.
+$$
+\end{theorem}
+
+\begin{proof}
+See \url{https://en.wikipedia.org/wiki/Proofs_involving_ordinary_least_squares}.
+\end{proof}
+
+\framebreak
+\begin{theorem}[Estimation of $\bm{\beta}$ - MLE]
+If $X \in \mathbb{R}^{m \times p}$ is of full rank and assume that $\bm{\epsilon} \sim \mathcal{N}(\bm{0, \Sigma}=\sigma^2 I_m)$, then the maximum likelihood estimator (MLE) of $\bm{\beta}=(\beta_1, \ldots, \beta_p) \in \mathbb{R}^{p \times 1}$ is given as follows:
+$$
+\hat{\bm{\beta}}=\bm{(X'X)^{-1} X'y}.
+$$
+\end{theorem}
+
+\begin{proof}
+$$
+\begin{aligned}
+\ell(\beta) &= \sum_{i=1}^m \log f_{y}(y_i;\mathbf{x}_i, \beta) =   -\sum_{i=1}^m  \left( \frac{(y_{i}-  \mathbf{x}'_i\beta)^2}{\sigma^2} \right)  + \text{const}.
+\end{aligned}
+$$
+Remaining steps are to be explored together.
+\end{proof}
+
+\framebreak
+
+\begin{theorem}[Estimation of $\sigma^2$]
+If $X \in \mathbb{R}^{m \times p}$ is of full rank, then the unbiased estimator of $\sigma^2$ is given as follows:
+$$
+\hat{\sigma}^2= \frac{1}{m-p} y' M y,
+$$
+where $M = I_m - X(X'X)^{-1}X'$ and  $p$ is the rank of $X$ (intuitively speaking, the number of independent covariates in $X$).
+\end{theorem}
+Note that $E[\hat{\sigma}^2] = \frac{m-p}{m-p} \sigma^2=  \sigma^2$.
+
+\begin{proof}
+$$
+\begin{aligned}
+E[y' M y] &\overset{(a)}{=} E[\bm{\epsilon}' M \bm{\epsilon}] \overset{(b)}{=}  E[\text{tr}(\bm{\epsilon}' M \bm{\epsilon})]\overset{(c)}{=}  E[\text{tr}(M\bm{\epsilon}  \bm{\epsilon}')]\\ 
+&\overset{(d)}{=}  \text{tr}(E[M\bm{\epsilon}  \bm{\epsilon}']) 
+\overset{(e)}{=} \text{tr}(M \cdot E[\bm{\epsilon}  \bm{\epsilon}'])\overset{(f)}{=} \text{tr}(M \cdot \sigma^2 I_m) \\
+&\overset{(g)}{=} \sigma^2 \text{tr}(M) \overset{(h)}{=} \sigma^2 (m-p).
+\end{aligned}
+$$
+\end{proof}
+
+\framebreak
+Here $\text{Tr}(A)$ (trace) means the diagonal sum of a matrix $A$.
+\begin{itemize}
+\item (a): By definition of $M$.
+\item (b): $\bm{\epsilon}' M \bm{\epsilon}$ is a $(1\times1)$ matrix.
+\item (c): By definition of trace (\url{https://en.wikipedia.org/wiki/Trace_(linear_algebra)}).
+\item (d): By definition of trace (\url{https://math.stackexchange.com/questions/2228398/trace-trick-for-expectations-of-quadratic-forms}).
+\item (e): $M$ and $\bm{\epsilon}$ are independent.
+\item (f): By the assumption in  \eqref{eq:linmodgen}. Note that $E[\bm{\epsilon}\bm{\epsilon}']=Var(\bm{\epsilon})$ (why?)
+\item (g): Obvious.
+\item (h): $\text{tr}(M) = \text{tr}(I_m) - \text{tr}(X(X'X)^{-1}X') =  \text{tr}(I_m) - \text{tr}(X'X(X'X)^{-1}) = m - p$ (why?)
+\end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}{Confidence about regression models}
+
+Suppose we have two regression models from different data, where the fitted regression line is $\hat{y}_i =  1 + 0.5x_i$ for both.
+
+     \centering
+     \includegraphics[trim={0cm 0.5cm 0cm 0.8cm},clip,height=8cm, width=12cm]{regplots.pdf}
+
+Shall we have the same level of `confidence' on both regression models?
+
+\end{frame}
+
+%\begin{theorem}[Prediction of $\bm{y}$ with known $\bm{V}$ and updated $\bm{X}_{i,*}$]
+%Suppose that for the subject $i$, we observed a new covariate vector $\bm{X}_{i,*}$. In this case, the predicted value of $\bm{y}_{i,*}$ is given as follows:
+%$$
+%\begin{aligned}
+%\hat{\bm{y}}_{i,*}:&= \bm{X}_{i,*}\hat{\bm{\beta}} + \bm{Z}_i\hat{\bm{u}}_i \\
+%			  &=  \bm{X}_{i,*}\hat{\bm{\beta}} + \bm{Z}_i\bm{G Z_i'V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}})} \\
+%			  &=  \bm{X}_{i,*}\hat{\bm{\beta}} + (\bm{Z_iG Z_i'+\Sigma_i})\bm{V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}})} - \bm{\Sigma_i}\bm{V_i^{-1}(y_i-X_{i}\hat{\bm{\beta}} )}\\
+%&= \bm{(\Sigma_i V_i^{-1}) \cdot X_{i,*}\hat{\bm{\beta}}} + (\bm{I_{T_i} - \Sigma_i V_i^{-1}}) \cdot \bm{y}_i
+%\end{aligned}
+%$$
+%\end{theorem}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Interval Estimation}
+
+\begin{theorem}[Estimation of $Var(\hat{\bm{\beta}}^{OLS})$]
+If $X$ is of full rank and assume that $\bm{\epsilon} \sim \mathcal{N}(\bm{0, \Sigma}=\sigma^2 I_m)$, then $Var(\hat{\bm{\beta}})$ is given as follows:
+$$
+Var(\hat{\bm{\beta}}^{OLS})=\sigma^2 \bm{(X'X)}^{-1} .
+$$
+\end{theorem}
+
+\begin{proof} 
+$\hat{\bm{\beta}}^{OLS}=\bm{(X'X)^{-1} X'y} = \bm{(X'X)^{-1} X'(X\beta + \epsilon)} = \bm{\beta + (X'X)^{-1} X'\epsilon}$, so we have
+$$
+\begin{aligned}
+Var(\hat{\bm{\beta}}^{OLS}) &= \bm{(X'X)^{-1}X'}  Var( \bm{ \epsilon}) \bm{X(X'X)^{-1} } \\
+&= \bm{(X'X)^{-1}X'}   \sigma^2 I_m\bm{X(X'X)^{-1} } = \sigma^2 \bm{(X'X)}^{-1}.
+\end{aligned}
+$$
+
+\end{proof}
+
+\framebreak
+
+\begin{itemize}
+\item Note that $Var(\hat{\bm{\beta}})$ is a covariance matrix so that the diagonal components are $\left(Var(\hat{\beta_1}), Var(\hat{\beta_2}), \ldots, Var(\hat{\beta_p}) \right)$,
+where
+$$
+Var(\hat{\beta_j}) = \left[Var(\hat{\bm{\beta}})\right]_{j,j} = \sigma^2 \left[\bm{(X'X)}^{-1}\right]_{j,j} ,
+$$
+and
+$$
+\widehat{Var}(\hat{\beta_j})  =\widehat{\left[Var(\hat{\bm{\beta}})\right]}_{j,j} =\hat{\sigma}^2 \left[\bm{(X'X)}^{-1}\right]_{j,j}.
+$$
+
+\end{itemize}
+
+\framebreak
+We are interested whether $j^{th}$ covariate has significant impact on $\mathbf{y}$, which can be expressed as the following hypotheses:
+$$
+H_0: \beta_j=0 \qquad \text{VS} \qquad H_1: \beta_j \ne 0.
+$$
+Firstly, we define $t_j = {\hat{\beta}_j}/{\sqrt{\widehat{Var}(\hat{\beta_j})}}$.
+We reject $H_0$ (equivalently consider $\beta_j$ as significant) at $95\%$ level if 
+\begin{itemize}
+	\item $\mathbb{P} \left(t_{n-p;0.975}  \geq \left|t_j \right| \right) \leq 0.05$, or
+	\item $\left|t_j\right| \geq t_{n-p;0.975} \overset{n \rightarrow \infty}\simeq z_{0.975} = 1.96$,  or
+	\item $0 \not\in (\hat{\beta}_j - t_{n-p;0.975} \cdot \sqrt{\widehat{Var}(\hat{\beta_j})}, \ \hat{\beta}_j + t_{n-p;0.975}\cdot \sqrt{\widehat{Var}(\hat{\beta_j})}  )$.
+
+\end{itemize}
+
+Note that $t_j \sim t(n-p)$ under $H_0$.
+
+\end{frame}
+
+
+
+\begin{frame}{Residual Sum of Squares (RSS)}
+
+The residual sum of squares is:
+\[
+\mathrm{RSS} = \sum_{i=1}^n (y_i - \hat{y}_i)^2 = (y - \hat{y})^\top (y - \hat{y}) = \hat{\sigma}^2 (n-p)
+\]
+
+Using $\hat{y} = H y$ where $H = X'(X'X)^{-1}X$:
+\[
+\mathrm{RSS} = (y - Hy)^\top (y - Hy)
+= y^\top (I - H)^\top (I - H) y
+\]
+
+Since $H$ is symmetric and idempotent ($H = H^\top = H^2$):
+\[
+\boxed{
+\mathrm{RSS} = y^\top (I - H)  y = \hat{\sigma}^2 (n-p)
+}
+\]
+
+It is also known that $\frac{\mathrm{RSS}}{\sigma^2} \sim \chi^2_{n-p}
+$ as $\mathrm{Rank}(I-H)=n-p$.
+
+\end{frame}
+
+
+\begin{frame}{Explained  Sum of Squares (ESS)}
+
+The explained sum of squares is:
+\[
+\mathrm{ESS} = \sum_{i=1}^n (\hat{y}_i - \bar{y})^2 = (\hat{y} - \bar{y}\mathbf{1})^\top (\hat{y} - \bar{y}\mathbf{1})
+= \hat{y}^\top (I - J)\hat{y},
+\]
+
+where $\mathbf{1}$ be the vector of ones and $J = \frac{1}{n}\mathbf{1}\mathbf{1}^\top$.
+
+
+Substitute $\hat{y} = Hy$:
+\[
+\mathrm{ESS} = y^\top H (I - J) H y
+\]
+
+If the model includes an intercept (so that $HJ = J$), this simplifies to:
+\[
+\boxed{
+\mathrm{ESS} = y^\top (H - J) y
+}
+\]
+
+It is also known that $\frac{\mathrm{ESS}}{\sigma^2} \sim \chi^2_{p-1}
+$ {\color{red}provided $H_0: \beta_2=\cdots=\beta_p=0$ is true}.
+
+
+\end{frame}
+
+
+\begin{frame}{Significance of the regression model}
+
+We wonder if the fitted regression model is (statistically) meaningful, which is equivalent to test the following:
+$$
+H_0: \beta_2=\cdots=\beta_p=0 \quad \text{ vs } \quad  H_1: H_0 \text{ is not true}
+$$
+\begin{itemize}
+    \item Intuitively, we expect that if $\mathrm{ESS}$ is larger (i.e., simple $\bar{y}$ is not enough to explain the variations in $y$), then $H_0$ is less likely to be true. 
+    \item So we want to reject $H_0$ if $\mathrm{ESS}$ is `large enough' compared to $\mathrm{RSS}$.
+
+Wait..... how large is `large enough'?
+
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Significance of the regression model}
+
+We wonder if the fitted regression model is (statistically) meaningful, which is equivalent to test the following:
+$$
+H_0: \beta_2=\cdots=\beta_p=0 \quad \text{ vs } \quad  H_1: H_0 \text{ is not true}
+$$
+Note that we know that $\mathrm{RSS}$ and $\mathrm{ESS}$ are independent (why?),  and $\frac{\mathrm{RSS}}{\sigma^2} \sim \chi^2_{n-p}$ and $\frac{\mathrm{ESS}}{\sigma^2} \sim \chi^2_{p-1}
+$ {\color{red}provided $H_0$ is true}.
+
+Therefore, under $H_0$, we know that
+$$
+{F}_{all}=\frac{\mathrm{ESS} / (p-1)}{\mathrm{RSS} / (n-p)} \sim F_{p-1, n-p},
+$$
+and reject $H_0$ at the significance level $\alpha$ if
+$$
+{F}_{all} > F_{p-1, n-p; \alpha}.
+$$
+
+\end{frame}
+
+
+\begin{frame}{Significance of the regression coefficient}
+
+We consider if the $j^{th}$ covariate is (statistically) meaningful, which is equivalent to test the following:
+$$
+H_0: \beta_j=0 \quad \text{ vs } \quad  H_1: H_0 \text{ is not true}
+$$
+Similarly, it is known that 
+$ \color{blue}
+(\hat{\beta}_j -\beta_j)/ \sqrt{Var(\hat{\beta}_j)}={\hat{\beta}_j}/{\sigma \sqrt{\left[\bm{(X'X)}^{-1}\right]_{j,j}}} \sim \mathcal{N}(0,1)$ under $H_0$ so that $(\hat{\beta}_j / Var(\hat{\beta}_j) )^2 \sim \chi^2_1$, 
+ and $\hat{\beta}_j$ and $\color{red} \mathrm{RSS}$ are independent (why?) provided $H_0$ is true.
+
+Therefore, under $H_0$, we know that
+$$
+t^2_j = \frac{\color{blue} {\hat{\beta}^2_j}/{\sigma^2 {\left[\bm{(X'X)}^{-1}\right]_{j,j}}}}{\color{red} \hat{\sigma}^2 /\sigma^2 }={F}_j=\frac{\color{blue}(\hat{\beta}_j / Var(\hat{\beta}_j) )^2}{\color{red}\mathrm{RSS} / (\sigma^2(n-p))}  \sim F_{1, n-p},
+$$
+and reject $H_0$ at the significance level $\alpha$ if
+$$
+t^2_j={F}_j > F_{1, n-p; \alpha}.
+$$
+
+\end{frame}
+
+\begin{frame}{Total Sum of Squares (TSS)}
+By definition, \[
+\mathrm{TSS} = \sum_{i=1}^n (y_i - \bar{y})^2
+= y^\top (I - J) y
+\] and
+\[
+\boxed{
+\mathrm{TSS} = \mathrm{ESS} + \mathrm{RSS}
+}
+\]
+
+
+
+or equivalently:
+\[
+y^\top (I - J) y = y^\top (H - J) y + y^\top (I - H) y
+\]
+
+\end{frame}
+
+\begin{frame}{Coefficient of determination: $R^2$}
+As mentioned before, if $\mathrm{ESS}$ is larger, it implies that the regression model will be more meaningful. So we define the following measure accordingly:
+$$
+R^2 = \frac{\mathrm{ESS}}{\mathrm{TSS}} =1- \frac{\mathrm{RSS}}{\mathrm{TSS}}
+$$
+Since $1-R^2 = \frac{\mathrm{RSS}}{\mathrm{TSS}}$, we also have
+$$
+\hat{F}=\frac{\mathrm{ESS} / (p-1)}{\mathrm{RSS} / (n-p)} = \frac{R^2 / (p-1)}{(1-R^2) / (n-p)} = \frac{n-p}{p-1} \cdot \frac{R^2}{1-R^2}.
+$$
+
+\end{frame}
+
+
+\end{document}

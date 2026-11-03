@@ -1,0 +1,288 @@
+\documentclass{beamer}
+\mode<presentation> {\usetheme{default}}
+%\setbeamersize{text margin left=10mm,text margin right=10mm} 
+
+\setbeamertemplate{footline}[frame number]
+
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{bm}
+\usepackage{needspace}
+\usepackage{comment}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{bbm, dsfont}
+\usepackage{listings}
+
+\usetikzlibrary{arrows,shapes,calc,positioning}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+%
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{remk}{Definition}[section]
+\newtheorem{exam}{Example}[section]
+\newtheorem{prob}{Exercise}[section]
+\newtheorem{solu2}{Solution}[section]
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+
+\newcommand{\dif}{\operatorname{d}}
+\newcommand{\var}{\operatorname{Var}}
+\newcommand{\brtexttt}[1]{\texttt{\color{brown}{#1}}}
+
+%opening
+\title{Logistic Regression}
+\author{Himchan Jeong, FSA}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Logistic Regression}
+
+\subsection{Introduction}
+
+
+\begin{frame}{Introduction and acknowledgement}
+
+\begin{itemize}
+\item I want to start with a disclaimer in the name `logistic \textbf{regression}', which can be in fact misleading.
+\item Logistic regression is basically one of the methods for \textbf{binary classification problems}, where the response variable is in fact qualitative and has only two types of responses.
+\item Throughout this section, we assume that the response variable $y$ can take only two values, $0$ or $1$, while their interpretation solely depends on the context.
+\item Note that most of the contents in this section are from Section 4.3 of the  \href{https://hastie.su.domains/ISLR2/ISLRv2_corrected_June_2023.pdf.download.html}{ISL textbook}.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Default data description}
+
+To introduce logistic regression, let us consider a simulated dataset named `Default' with 10,000 observations, where the response variable is \brtexttt{default} (binary) and three covariates are available; \brtexttt{student} (binary), \brtexttt{balance} (continuous), and \brtexttt{income} (continuous).
+\begin{table}
+\centering
+\begin{tabular}{ccccc}
+\toprule 
+index & \brtexttt{default} & \brtexttt{student} & \brtexttt{balance} & \brtexttt{income} \\
+\midrule 
+1               & No      & No     & 729.5265  & 44361.625 \\
+2               & No      & Yes    & 817.1804  & 12106.135 \\
+3               & No      & No     & 1073.5492 & 31767.139 \\
+$\vdots$               & $\vdots$      & $\vdots$    & $\vdots$  & $\vdots$ \\
+10000  &    No  &   Yes & 200.9222 & 16862.95 \\
+\bottomrule
+\end{tabular}
+\end{table}
+Note that 9,000 observations are used to train the models, while 1,000 observations are set aside for the out-of-sample validation.
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Simple logistic regression}
+
+
+As of now, let us only consider \brtexttt{balance} for the logistic regression model.
+\begin{itemize}
+	\item For simplicity, we write $Pr(\brtexttt{default = Yes} | \brtexttt{balance})$ as $p( \brtexttt{balance})$, which will range between 0 and 1.
+	\item Then for any given value of \brtexttt{balance}, a prediction of \brtexttt{default} probability can be made.
+	\item Note that the predicted probability needs to be converted to actual decision (default or not) with a threshold. Note that a usual threshold for the binary classification is 0.5 (i.e., if $p( \brtexttt{balance})>0.5$, then that person is expected to default).
+	\item However, if the company wants to apply conservative underwriting criteria, then the threshold can be 0.1 (i.e., if $p( \brtexttt{balance})>0.1$, then that person is expected to default and likely denied for a credit application).
+\end{itemize}
+
+\framebreak
+
+
+\begin{itemize}
+\item In the language of the GLMs, $y \in \{0, 1\}$ is  \brtexttt{default} (1 is yes), $\mathbf{x}$ is $(1, \brtexttt{balance})'$, and $\beta=(\beta_0, \beta_1)$ is the associated regression coefficients.
+\item By using the logit link to connect $p(\mathbf{x})$ and $\mathbf{x}'\beta$, we have
+$$
+p(\mathbf{x}) = \frac{e^{\mathbf{x}'\beta}}{1+ e^{\mathbf{x}'\beta}} \ \text{ or } \ \log\left(\frac{p(\mathbf{x})}{1-p(\mathbf{x})}\right) = \mathbf{x}'\beta.
+$$
+\item Note that one can use a different link function to connect $p(\mathbf{x})$ and $\mathbf{x}'\beta$, for example, $\eta(\cdot) = \Phi^{-1}(\cdot)$ (probit link) and it is called `probit regression', where $\Phi(\cdot)$ is the CDF of a standard normal random variable.
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+\item From the regression results (via \texttt{glm} in \texttt{R}), it is shown that $\hat{\beta}_1 =0.0055$; this indicates that an increase in balance is associated with an
+increase in the probability of default. 
+\item To be precise, a one-unit increase in balance is associated with an increase in the log odds of default by 0.0055 units.
+\end{itemize}
+
+\begin{table}
+\caption{Simple logistic regression for \brtexttt{default} only with \brtexttt{balance}}
+\begin{tabular}{lrrrr}
+\toprule
+  & Coefficient & Std. error & $z$-statistic & $p$-value\\
+\midrule
+\brtexttt{Intercept} & -10.5059 & 0.3758 & -28.0 & $<0.0001$\\
+\brtexttt{balance} & 0.0054 & 0.0002 & 23.5 & $<0.0001$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{8pt}
+
+Question: how large is the predicted default probability for an applicant whose \brtexttt{balance} is 2,000 with the above results?
+
+\framebreak
+
+
+\begin{itemize}
+\item One can repeat a similar analysis (simple logistic regression) where $\mathbf{x}$ is $(1, \brtexttt{student[Yes]})'$.
+\item It indicates that students tend to have higher default probabilities than non-students:
+\end{itemize}
+
+\begin{table}
+\caption{Simple logistic regression for \brtexttt{default} only with \brtexttt{student}}  \label{tab:2} \vspace{-10pt}
+\begin{tabular}{lrrrr}
+\toprule
+  & Coefficient & Std. error & $z$-statistic & $p$-value\\
+\midrule
+\brtexttt{Intercept} & -3.5761 & 0.0771 & -46.4 & $<0.0001$\\
+\brtexttt{student[Yes]} & {\color{blue}\textbf{0.5296}} & 0.1211 & 4.4 & $<0.0001$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+\begin{frame}[allowframebreaks]
+\frametitle{Multiple logistic regression}
+
+Indeed, it would be more natural to consider all the available covariates simultaneously so that $\mathbf{x}=(1, x_1, x_2, x_3)$ is $(1, \brtexttt{balance}, \brtexttt{income}$ (in thousands of dollars), $\brtexttt{student[Yes]})'$, $\beta = (\beta_0, \beta_1, \beta_2, \beta_3)'$, and
+$$
+\log\left(\frac{p(\mathbf{x})}{1-p(\mathbf{x})}\right) = \beta_0+\beta_1 x_1+\beta_2 x_2+\beta_3 x_3.
+$$
+
+\begin{table}
+\caption{Multiple logistic regression for \brtexttt{default} with all covariates} \label{tab:3} \vspace{-10pt}
+\begin{tabular}{lrrrr}
+\toprule
+  & Coefficient & Std. error & $z$-statistic & $p$-value\\
+\midrule
+\brtexttt{Intercept} & -10.7161 & 0.5186 & -20.7 & $<0.0001$\\
+\brtexttt{balance} & 0.0056 & 0.0002 & 23.2 & $<0.0001$\\
+\brtexttt{income} & 0.0034 & 0.0088 & 0.4 & 0.7019\\
+\brtexttt{student[Yes]} & {\color{red}\textbf{-0.5106}} & 0.2505 & -2.0 & 0.0415\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\framebreak
+\begin{itemize}
+\item The $p$-value associated with the student status is very small, indicating that it is associated with the probability of default. 
+\item However, the coefficient for the student variable is {\color{red}\textbf{negative}}, indicating that students are less likely to default than non-students.
+\item In contrast, the coefficient for the student variable is {\color{blue}\textbf{positive}} in
+Table  \ref{tab:2}. How is it possible for student status to be associated with an
+increase in probability of default in Table  \ref{tab:2} and a decrease in probability
+of default in Table \ref{tab:3}? 
+\end{itemize}
+
+\framebreak
+
+\begin{itemize}
+\item For both students and non-students group, higher credit balance is associated with higher default rate.
+\item Students tend to have higher credit balance than non-students.
+\end{itemize}
+
+\begin{figure}
+\vspace{-10pt}
+  \centering
+\includegraphics[width=0.9\textwidth]{default.png}
+\end{figure}
+In conclusion, it is shown from the multiple logistic regression model that a student is less risky than a non-student \emph{with the same credit card balance}.
+
+
+\end{frame}
+
+
+\begin{frame}[allowframebreaks]
+\frametitle{Model evaluation}
+\begin{itemize}
+	\item The predicted binary class does not only depend on the fitted model, but also the threshold for the decision (e.g., 0.5 vs 0.1) as mentioned before.
+	\item As such, one can expect different out-of-sample validation results depending on the used threshold even with the same model used.
+	\item Once we have the actual and predicted binary results, there are in total four combinations and they can be represented in the following format - which is called a \textbf{confusion matrix}.
+
+\begin{table}[]
+\begin{tabular}{cc|ccc}
+                                                                    &       & \multicolumn{3}{c}{Actual}     \\
+                                                                             &       & Negative  & \multicolumn{1}{c|}{Positive} & Total \\ \hline
+\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Predicted\\ \end{tabular}} & Negative    & TN & \multicolumn{1}{c|}{FN}  & TN+FN   \\
+                                                                             & Positive   & FP   & \multicolumn{1}{c|}{TP}  & FP+TP    \\ \cline{2-5} 
+                                                                             & Total & TN+FP  & \multicolumn{1}{c|}{FN+TP}  &  
+\end{tabular}
+\end{table}
+
+\framebreak
+
+	\item Here we define two concepts. \textbf{Sensitivity} refers to the model's ability to correctly detect those who are \emph{positive} out of those \emph{who do have} the condition, which is  defined as follows:
+$$
+\text{Sensitivity:=}\frac{\text{TP}}{\text{TP}+\text{FN}}.
+$$
+	\item \textbf{Specificity} refers to the model's ability to correctly detect those who are \emph{negative} out of those \emph{who do not have} the condition, which is  defined as follows:
+$$
+\text{Specificity:=}\frac{\text{TN}}{\text{TN}+\text{FP}}.
+$$
+\end{itemize}
+
+\framebreak
+
+
+\begin{table}[]
+\caption{Confusion matrix where the threshold is 0.5}
+\begin{tabular}{cc|ccc}
+                                                                    &       & \multicolumn{3}{c}{Actual default}     \\
+                                                                             &       & No  & \multicolumn{1}{c|}{Yes} & Total \\ \hline
+\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Predicted\\ Default\end{tabular}} & No    & 956 & \multicolumn{1}{c|}{25}  & 981   \\
+                                                                             & Yes   & 4   & \multicolumn{1}{c|}{15}  & 19    \\ \cline{2-5} 
+                                                                             & Total & 960 & \multicolumn{1}{c|}{40}  & 1000 
+\end{tabular}
+\end{table}
+Sensitivity$=15/40=37.5\%$,   Specificity$=956/960=99.58\%$. 
+\vspace{-6pt}
+\begin{table}[]
+\caption{Confusion matrix where the threshold is 0.1}
+\begin{tabular}{cc|ccc}
+                           &       & \multicolumn{3}{c}{Actual default}     \\
+                                                                             &       & No  & \multicolumn{1}{c|}{Yes} & Total \\ \hline
+\multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Predicted\\ Default\end{tabular}} & No    & 908 & \multicolumn{1}{c|}{5}  & 913   \\
+                                                                             & Yes   & 52   & \multicolumn{1}{c|}{35}  & 87    \\ \cline{2-5} 
+                                                                             & Total & 960 & \multicolumn{1}{c|}{40}  & 1000 
+\end{tabular}
+\end{table}
+Sensitivity$=35/40=87.5\%$,   Specificity$=908/960=94.58\%$. 
+
+\framebreak
+
+\begin{itemize}
+	\item Lower threshold implies that we are more likely to diagnose one as `positive' given the  model. Therefore, the ability to detect `true positive' (which is \textbf{sensitivitiy}) increases in this case while the ability to detect `true negative' (which is \textbf{specificity}) decreases.
+	\item On the other hand, a higher threshold implies that we are more likely to diagnose one as `negative' given the model. Therefore, the ability to detect `true negative' (which is \textbf{specificity}) increases in this case while the ability to detect `true positive' (which is \textbf{sensitivitiy}) decreases.
+\end{itemize}
+
+\framebreak
+
+The ROC (receiver operating characteristics) curve is a popular graphic for simultaneously displaying \textbf{sensitivitiy} and \textbf{specificity} for all possible thresholds. 
+
+\begin{figure}
+  \centering
+\includegraphics[trim={0 0 0 1cm},clip, width=0.7\textwidth]{rocs.png}
+\end{figure}
+\begin{itemize}
+	\item The overall performance of a classifier, summarized over all possible thresholds, is given by the \emph{area under the curve} (AUC). An ideal ROC curve will hug the top left corner, so the larger AUC the better the classifier.
+	\item Note that if one uses a `random classifier' (which assigns 0 or 1 at random), then the ROC will be the diagonal line and the corresponding AUC will be 0.5.
+	\item In this case, the AUC of the (multiple) logistic regression model is 0.972, which is quite satisfactory.
+\end{itemize}
+
+\end{frame}
+
+
+
+
+\end{document}
